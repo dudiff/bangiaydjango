@@ -1,0 +1,55 @@
+
+.brand-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Khoảng cách giữa các logo */
+    flex-wrap: nowrap;
+}
+
+.brand-box {
+    border: 2px solid #ccc; /* Viền xám */
+    border-radius: 10px; /* Bo góc viền */
+    padding: 10px; /* Khoảng cách bên trong */
+    background-color: #fff; /* Nền trắng */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px; /* Định kích thước box */
+    height: 150px; /* Định kích thước box */
+}
+
+.brand-box img {
+    width: 100px; /* Điều chỉnh kích thước logo */
+    height: auto;
+}
+.custom-dropdown-menu {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.custom-dropdown:hover .custom-dropdown-menu,
+.custom-dropdown-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+.add-to-cart-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.product-img-wrapper:hover .add-to-cart-btn {
+    opacity: 1;
+}

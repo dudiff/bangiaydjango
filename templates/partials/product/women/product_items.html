@@ -1,0 +1,51 @@
+{% load static %}
+{% for product in products %}
+<div class="col-12 col-sm-6 col-lg-4">
+    <div class="card border border-transparent position-relative overflow-hidden h-100 transparent">
+        <div class="card-img position-relative">
+            <picture class="position-relative overflow-hidden d-block bg-light product-img-wrapper">
+                <div class="card-badges">
+                    {% if product.labels == 'sale' %}
+                    <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-danger rounded-circle d-block me-1"></span> Sale</span>
+                    {% elif product.labels == 'hot' %}
+                    <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-warning rounded-circle d-block me-1"></span> Hot</span>
+                    {% elif product.labels == 'new' %}
+                    <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-success rounded-circle d-block me-1"></span> New In</span>
+                    {% endif %}
+                </div>
+                <div class="position-absolute" style="right: 1px; z-index: 1100;">
+                    <span class="favorite-btn">
+                        <i class="fa-heart {% if product in favorite_products %}fas text-danger{% else %}far{% endif %}"></i>
+                    </span>
+                </div>
+                {% if product.image %}
+                    <img class="w-100 img-fluid position-relative z-index-10 product-img" 
+                        title="{{ product.name }}" 
+                        src="{{ product.image.url }}" 
+                        alt="{{ product.name }}"
+                        style="height: 300px; object-fit: contain;">
+                {% else %}
+                    <img class="w-100 img-fluid position-relative z-index-10 product-img" 
+                        title="{{ product.name }}" 
+                        src="{% static 'assets/images/placeholder.jpg' %}" 
+                        alt="{{ product.name }}"
+                        style="height: 300px; object-fit: contain;">
+                {% endif %}
+            </picture>
+        </div>                                                                      
+        <div class="card-body px-0">
+            <a class="text-decoration-none link-cover" href="{% url 'products:product_detail' product.id %}">{{ product.name }}</a>
+            <small class="text-muted d-block">{{ product.brand.name }} | {{ product.category.name }}</small>
+            <p class="mt-2 mb-0 small">
+                {% if product.sale_price %}
+                    <span class="text-danger fs-6">{{ product.sale_price }}VNĐ</span>
+                    <s class="text-muted ms-2">{{ product.price }}VNĐ</s>
+                {% else %}
+                    <span class="text-danger fs-6">{{ product.price }}VNĐ</span>
+                {% endif %}
+            </p>
+            <p class="small text-warning">⭐ {{ product.average_rating }}/5</p>
+        </div>
+    </div>
+</div>
+{% endfor %}

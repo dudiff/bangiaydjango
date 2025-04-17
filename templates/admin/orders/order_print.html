@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Đơn hàng #{{ order.order_code }}</title>
+    <style>
+        @media print {
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                margin: 20px;
+            }
+            .no-print {
+                display: none;
+            }
+            @page {
+                margin: 1cm;
+            }
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .order-info {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .total {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .print-button {
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-button no-print">
+        <button onclick="window.print()">In hóa đơn</button>
+    </div>
+
+    <div class="header">
+        <h1>HÓA ĐƠN BÁN HÀNG</h1>
+        <h2>DStore</h2>
+        <p>Mã đơn hàng: {{ order.order_code }}</p>
+        <p>Ngày đặt: {{ order.created_at|date:"d/m/Y H:i:s" }}</p>
+    </div>
+
+    <div class="order-info">
+        <h3>Thông tin khách hàng:</h3>
+        {{ order.shipping_address|linebreaks }}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Sản phẩm</th>
+                <th>Size</th>
+                <th>Màu sắc</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order_items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.size.name }}</td>
+                <td>{{ item.color.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.price|floatformat:0 }}VNĐ</td>
+                <td>{{ item.total_price|floatformat:0 }}VNĐ</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="total">
+        <p>Phí vận chuyển: {{ order.shipping_fee|floatformat:0 }}VNĐ</p>
+        <div class="d-flex justify-content-between">
+            <div>
+                <p class="m-0 fw-bold fs-5">Tổng tiền</p>
+            </div>
+            <p>{{ order.total_amount|floatformat:0 }}VNĐ</p>
+        </div> 
+    </div>
+</body>
+</html>

@@ -1,0 +1,58 @@
+{% load static %}
+<li class="nav-item dropdown dropdown position-static">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Thương hiệu
+    </a>
+    <div class="dropdown-menu dropdown-megamenu">
+        <div class="container-fluid">
+            <div class="row g-0 g-lg-3">
+                <div class="col-lg-12">
+                    <div class="row py-3 py-lg-0 flex-wrap">
+                        {% for brand in global_brands %}
+                        {% if forloop.counter0|divisibleby:4 %}
+                        <div class="d-flex flex-row w-100 justify-content-around mb-4">
+                        {% endif %}
+                        <div class="brand-box">
+                            <a href="{% url 'products:all_products' %}?brand={{ brand.id }}" class="text-decoration-none">
+                                {% if brand.logo %}
+                                    <img src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                                {% else %}
+                                    <img src="{% static 'assets/images/placeholder.jpg' %}" alt="{{ brand.name }}">
+                                {% endif %}
+                            </a>
+                        </div>
+                        {% if forloop.counter|divisibleby:4 or forloop.last %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>
+
+<style>
+    .brand-box {
+        width: 180px;
+        height: 100px;
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .brand-box:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .brand-box img {
+        max-width: 100%;
+        max-height: 70px;
+        object-fit: contain;
+    }
+</style>

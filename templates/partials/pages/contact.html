@@ -1,0 +1,104 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+<style>
+        .contact-form-wrapper {
+            transition: all 0.3s ease;
+        }
+        .contact-form-wrapper:hover {
+            transform: translateY(-5px);
+        }
+        .form-control {
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color:rgb(34, 255, 89);
+            box-shadow: 0 0 0 0.25rem rgba(60, 255, 34, 0.25);
+        }
+        .btn-primary:hover {
+            background-color:rgb(30, 183, 244) !important;
+            transform: translateY(-2px);
+        }
+</style>
+{% block content %}
+<main class="tg-main tg-haslayout">
+    <div class="tg-sectionspace tg-haslayout">
+        <div class="container">
+            <div class="row">
+                <div class="tg-contactus">
+                    <div class="col-12">
+                        <div class="text-center mb-4">
+                            <h2>Xin chào bạn! Hãy liên hệ DStore chúng tôi nếu bạn cần.</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Google Map Section -->
+                        <div class="col-12 col-md-6 mb-4">
+                            <div class="tg-locationmap">
+                                <iframe
+                                    width="100%"
+                                    height="400"
+                                    frameborder="0"
+                                    style="border:0"
+                                    allowfullscreen
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d894.547555601249!2d105.76261236055824!3d21.04688147849455!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313454c3ce577141%3A0xb1a1ac92701777bc!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBUw6BpIG5ndXnDqm4gdsOgIE3DtGkgdHLGsOG7nW5nIEjDoCBO4buZaQ!5e1!3m2!1svi!2s!4v1742845122011!5m2!1svi!2s">
+                                </iframe>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Form Section -->
+                        <div class="col-12 col-md-6">
+                            <div class="contact-form-wrapper p-4 shadow-lg rounded-3 bg-white">
+                                <form method="POST" class="needs-validation" novalidate>
+                                    {% csrf_token %}
+                                    <fieldset>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <div class="form-floating">
+                                                    <input type="text" name="first_name" class="form-control rounded-3" id="first_name" placeholder="Họ" required>
+                                                    <label for="first_name">Họ*</label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <div class="form-floating">
+                                                    <input type="text" name="last_name" class="form-control rounded-3" id="last_name" placeholder="Tên" required>
+                                                    <label for="last_name">Tên*</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="email" name="email" class="form-control rounded-3" id="email" placeholder="Email" required>
+                                            <label for="email">Email*</label>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-3">
+                                            <input type="text" name="subject" class="form-control rounded-3" id="subject" placeholder="Chủ đề">
+                                            <label for="subject">Chủ đề</label>
+                                        </div>
+                                        
+                                        <div class="form-floating mb-4">
+                                            <textarea name="message" class="form-control rounded-3" id="message" style="height: 150px" placeholder="Nội dung" required></textarea>
+                                            <label for="message">Nội dung*</label>
+                                        </div>
+                        
+                                        <input type="hidden" name="_gotcha">
+                                        
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary btn-lg rounded-3 text-white" style="background-color:rgba(35, 228, 228, 0.93); border: none;">
+                                                <i class="fas fa-paper-plane me-2"></i>Gửi
+                                            </button>
+                                        </div>
+                                    </fieldset>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

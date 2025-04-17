@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn nhập hàng #{{ import_order.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: white;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .company-address {
+            margin-bottom: 20px;
+        }
+        .document-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .order-info {
+            margin-bottom: 30px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        .signature-line {
+            margin-top: 70px;
+            border-top: 1px solid #000;
+        }
+        
+        .no-print {
+            display: block;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            body {
+                padding: 0;
+                margin: 15mm;
+            }
+            
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+        <button onclick="window.print()" class="print-button" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+            <i class="fas fa-print"></i> In đơn hàng
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-size: 16px;">
+            Đóng
+        </button>
+    </div>
+
+    <div class="header">
+        <div class="company-name">D-STORE</div>
+        <div class="company-address">Thư Phú - Thường Tín - Hà Nội</div>
+        <div class="document-title">ĐƠN NHẬP HÀNG</div>
+        <div>Mã đơn: #{{ import_order.id }}</div>
+    </div>
+    
+    <div class="order-info">
+        <div class="info-row">
+            <div class="info-label">Nhà cung cấp:</div>
+            <div>{{ import_order.supplier.name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Người tạo:</div>
+            <div>{{ import_order.created_by.username }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Ngày tạo:</div>
+            <div>{{ import_order.created_at|date:"d/m/Y H:i" }}</div>
+        </div>
+        {% if import_order.notes %}
+        <div class="info-row">
+            <div class="info-label">Ghi chú:</div>
+            <div>{{ import_order.notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Sản phẩm</th>
+                <th>Kích cỡ</th>
+                <th>Số lượng</th>
+                <th>Giá nhập</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in import_order.items.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.size.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.purchase_price|floatformat:0 }}</td>
+                <td>{{ item.subtotal|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="5" style="text-align: right;">Tổng cộng:</td>
+                <td>{{ import_order.total_amount|floatformat:0 }}</td>
+            </tr>
+        </tfoot>
+    </table>
+    
+    <div class="footer">
+        <div class="signature-box">
+            <div>Người nhận hàng</div>
+            <div style="margin-top: 10px; font-weight: bold;">D-STORE</div>
+            <div style="margin-top: 5px;">Thư Phú - Thường Tín - Hà Nội</div>
+            <div class="signature-line"></div>
+        </div>
+        <div class="signature-box">
+            <div>Bên gửi hàng</div>
+            <div style="margin-top: 10px; font-weight: bold;">{{ import_order.supplier.name }}</div>
+            <div class="signature-line"></div>
+        </div>
+    </div>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        // Auto-print when the page loads if in print mode
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if this is a direct print request
+            if (window.location.search.includes('direct_print=true')) {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

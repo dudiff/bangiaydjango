@@ -1,0 +1,301 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+<section class="mt-0 overflow-lg-hidden vh-lg-100">
+  <div class="container">
+      <div class="row g-0 vh-lg-100">
+          <div class="col-12 col-lg-7 pt-5 pt-lg-10">
+              <div class="pe-lg-5">
+                  <nav class="d-none d-md-block">
+                      <ul class="list-unstyled d-flex justify-content-start mt-4 align-items-center fw-bolder small">
+                          <li class="me-4"><a class="nav-link-checkout" href="{% url 'cart:cart' %}">Giỏ hàng</a></li>
+                          <li class="me-4"><a class="nav-link-checkout active" href="{% url 'checkout:information' %}">Nhập thông tin</a></li>
+                          <li class="me-4"><a class="nav-link-checkout" href="{% url 'checkout:shipping' %}">Vận chuyển</a></li>
+                          <li><a class="nav-link-checkout nav-link-last" href="{% url 'checkout:payment' %}">Thanh toán</a></li>
+                      </ul>
+                  </nav>
+            <!-- Thêm div thông báo lỗi ngay sau thẻ form mở đầu -->
+            <form method="post" action="{% url 'checkout:process_checkout' %}" class="checkout-form" id="checkoutForm">
+                {% csrf_token %}
+                <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
+                <!-- Contact Information -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-4">
+                            <h3 class="fs-5 fw-bolder m-0">Thông tin liên hệ</h3>
+                            {% if not user.is_authenticated %}
+                                <small class="text-muted">Đã có tài khoản? <a href="{% url 'account_login' %}">Đăng nhập</a></small>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" name="full_name" required 
+                                       value="{{ user.full_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required 
+                                       value="{{ user.email }}" {% if user.is_authenticated %}readonly{% endif %}>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" name="phone" required
+                                       value="{{ user.profile.phone }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h3 class="fs-5 fw-bolder mb-4 pb-2 border-bottom">Địa chỉ giao hàng</h3>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Địa chỉ chi tiết</label>
+                                <input type="text" class="form-control" name="address" required
+                                       value="{{ user.profile.address }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Tỉnh/Thành phố</label>
+                                <select class="form-select" name="city" id="city" required>
+                                    <option value="">Chọn...</option>
+                                    {% for city in cities %}
+                                        <option value="{{ city.id }}" 
+                                            {% if user.profile.city_id == city.id %}selected{% endif %}>
+                                            {{ city.name_with_type }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Quận/Huyện</label>
+                                <select class="form-select" name="district" id="district" required>
+                                    <option value="">Chọn...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Phường/Xã</label>
+                                <select class="form-select" name="ward" id="ward" required>
+                                    <option value="">Chọn...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </form>
+              </div>
+            </div>
+<!-- Order Summary Sidebar -->
+<div class="col-12 col-lg-5 bg-light pt-lg-10 aside-checkout pb-5 pb-lg-0 my-5 my-lg-0">
+  <div class="p-4 py-lg-0 pe-lg-0 ps-lg-5">
+    <div class="pb-3">
+        {% for item in cart.items.all %}
+        <!-- Cart Item-->
+        <div class="row mx-0 py-4 g-0 border-bottom">
+            <div class="col-2 position-relative">
+                <span class="checkout-item-qty">{{ item.quantity }}</span>
+                <picture class="d-block border">
+                    <img class="img-fluid" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                </picture>
+            </div>
+            <div class="col-9 offset-1">
+                <div>
+                    <h6 class="justify-content-between d-flex align-items-start mb-2">
+                        {{ item.product.name }}
+                    </h6>
+                    <span class="d-block text-muted fw-bolder text-uppercase fs-9">
+                        Size: {{ item.size.name }} / Màu: {{ item.color.name }} / SL: {{ item.quantity }}
+                    </span>
+                </div>
+                <p class="fw-bolder text-end text-muted m-0">{{ item.product.price|floatformat:0 }}VNĐ</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="py-4 border-bottom">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Tạm tính:</span>
+            <span>{{ cart.get_subtotal }}VNĐ</span>
+        </div>
+        {% if cart.discount %}
+        <div class="d-flex justify-content-between mb-2 text-danger">
+            <span>Giảm giá:</span>
+            <span>-{{ cart.discount }}VNĐ</span>
+        </div>
+        {% endif %}
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="m-0 fw-bolder fs-6">Phí vận chuyển</p>
+            <p class="m-0 fs-6 fw-bolder">Tính sau</p>
+        </div>
+    </div>
+
+    <div class="pb-4 border-bottom">
+        <div class="d-flex flex-column flex-md-row justify-content-md-between mb-4 mb-md-2">
+            <div>
+                <p class="m-0 fw-bold fs-5">Thành tiền</p>
+                {% if cart.discount %}
+                <small class="text-success">Đã áp dụng mã giảm giá</small>
+                {% endif %}
+            </div>
+            <div class="text-end">
+                {% if cart.discount %}
+                    <p class="m-0 fs-5 fw-bold text-success">{{ cart.get_total_with_discount }}VNĐ</p>
+                {% else %}
+                    <p class="m-0 fs-5 fw-bold">{{ cart.get_subtotal }}VNĐ</p>
+                {% endif %}
+            </div>
+        </div>
+        <br>
+        <button type="submit" form="checkoutForm" class="btn btn-dark w-100 text-center">
+            Đến trang tiếp theo
+        </button>
+    </div>
+  </div>
+</div>
+</div>
+
+</section>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get form elements
+    const form = document.getElementById('checkoutForm');
+    const formErrors = document.getElementById('form-errors');
+    const citySelect = document.getElementById('city');
+    const districtSelect = document.getElementById('district');
+    const wardSelect = document.getElementById('ward');
+    const addressInput = document.querySelector('input[name="address"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const fullNameInput = document.querySelector('input[name="full_name"]');
+    const emailInput = document.querySelector('input[name="email"]');
+
+    function loadDistricts(cityId, selectedDistrictId = null) {
+        fetch(`/shipping/api/districts/${cityId}/`)
+            .then(response => response.json())
+            .then(data => {
+                districtSelect.innerHTML = '<option value="">Chọn...</option>';
+                data.forEach(district => {
+                    const option = new Option(district.name_with_type, district.id);
+                    if (district.id === parseInt('{{ user.profile.district_id|default:0 }}')) {
+                        option.selected = true;
+                    }
+                    districtSelect.add(option);
+                });
+                // Load wards if district is selected
+                if (districtSelect.value) {
+                    loadWards(districtSelect.value);
+                }
+            });
+    }
+    
+    function loadWards(districtId, selectedWardId = null) {
+        fetch(`/shipping/api/wards/${districtId}/`)
+            .then(response => response.json())
+            .then(data => {
+                wardSelect.innerHTML = '<option value="">Chọn...</option>';
+                data.forEach(ward => {
+                    const option = new Option(ward.name_with_type, ward.id);
+                    if (ward.id === parseInt('{{ user.profile.ward_id|default:0 }}')) {
+                        option.selected = true;
+                    }
+                    wardSelect.add(option);
+                });
+            });
+    }
+
+    // Event listeners for location selects
+    citySelect.addEventListener('change', function() {
+        loadDistricts(this.value);
+    });
+
+    districtSelect.addEventListener('change', function() {
+        loadWards(this.value);
+    });
+
+    // Form validation and submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm()) {
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    formErrors.textContent = data.error || 'Có lỗi xảy ra, vui lòng thử lại';
+                    formErrors.style.display = 'block';
+                }
+            });
+        }
+    });
+
+    // Form validation function
+    function validateForm() {
+        const requiredFields = {
+            'full_name': 'Họ và tên',
+            'email': 'Email',
+            'phone': 'Số điện thoại',
+            'address': 'Địa chỉ chi tiết',
+            'city': 'Tỉnh/Thành phố',
+            'district': 'Quận/Huyện',
+            'ward': 'Phường/Xã'
+        };
+
+        let errors = [];
+
+        // Phone number validation
+        const phoneField = document.querySelector('[name="phone"]');
+        const phoneValue = phoneField.value.trim();
+        const phoneRegex = /^[0-9]{10}$/;
+        
+        if (!phoneRegex.test(phoneValue)) {
+            errors.push('Số điện thoại phải có 10 chữ số');
+            phoneField.classList.add('is-invalid');
+        } else {
+            phoneField.classList.remove('is-invalid');
+        }
+
+        // Other fields validation
+        Object.entries(requiredFields).forEach(([fieldName, label]) => {
+            if (fieldName !== 'phone') {  // Skip phone as it's handled above
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (!field.value.trim()) {
+                    errors.push(label);
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            }
+        });
+
+        if (errors.length > 0) {
+            formErrors.textContent = 'Lỗi: ' + errors.join(', ');
+            formErrors.style.display = 'block';
+            return false;
+        }
+
+        formErrors.style.display = 'none';
+        return true;
+    }
+
+    // Load initial data if city is selected
+    if (citySelect.value) {
+        loadDistricts(citySelect.value);
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

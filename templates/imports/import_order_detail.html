@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn nhập hàng #{{ import_order.id }} | D-Store</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        .badge-info {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .detail-value {
+            margin-bottom: 0.5rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+    {% load static %}
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-file-invoice"></i> Đơn nhập hàng #{{ import_order.id }}</h2>
+                <p class="text-muted">Xem chi tiết đơn nhập hàng</p>
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'imports:print_order' import_order.id %}" class="btn btn-info" target="_blank">
+                    <i class="fas fa-print"></i> In đơn hàng
+                </a>
+                <a href="{% url 'imports:import_order_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fas fa-info-circle"></i> Thông tin chung</h5>
+                        <span class="badge bg-info">{{ import_order.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="detail-label">Nhà cung cấp</div>
+                            <div class="detail-value">{{ import_order.supplier.name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="detail-label">Người tạo</div>
+                            <div class="detail-value">{{ import_order.created_by.username }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="detail-label">Ngày tạo</div>
+                            <div class="detail-value">{{ import_order.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="detail-label">Tổng tiền</div>
+                            <div class="detail-value fs-5 fw-bold text-primary">{{ import_order.total_amount|floatformat:0 }} VNĐ</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8 mb-4">
+                {% if import_order.notes %}
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-sticky-note"></i> Ghi chú</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">{{ import_order.notes }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5><i class="fas fa-sticky-note"></i> Ghi chú</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted fst-italic">Không có ghi chú cho đơn hàng này.</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-list"></i> Chi tiết đơn hàng</h5>
+                <span class="badge bg-secondary">{{ import_order.items.count }} sản phẩm</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Sản phẩm</th>
+                                <th>Kích cỡ</th>
+                                <th>Số lượng</th>
+                                <th>Giá nhập (VNĐ)</th>
+                                <th>Thành tiền (VNĐ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in import_order.items.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.size.name }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">{{ item.purchase_price|floatformat:0 }}</td>
+                                <td class="text-end fw-bold">{{ item.subtotal|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Không có sản phẩm nào.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-secondary">
+                                <td colspan="5" class="text-end fw-bold">Tổng cộng:</td>
+                                <td class="text-end fw-bold fs-5">{{ import_order.total_amount|floatformat:0 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

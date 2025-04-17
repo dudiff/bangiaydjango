@@ -1,0 +1,60 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+{% load socialaccount %}
+    <!-- Main Section-->
+    <section class="min-vh-100 d-flex flex-column justify-content-center align-items-center p-4">
+        <!-- Page Content Goes Here -->
+
+        <!-- Login Form-->
+        <div class="container flex-grow-1 d-flex justify-content-center align-items-center">
+            <div class="col col-md-8 col-lg-6 col-xxl-5">
+                
+                <div class="shadow-xl p-4 p-lg-3 bg-white">
+                    <h2 class="text-center fw-bold mb-4">Đăng ký</h2>
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <strong>{{ form.errors }}</strong>
+                        </div>
+                    {% endif %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label" for="id_username">Tên đăng nhập</label>
+                            {{ form.username }}
+                        </div>
+                    
+                        <div class="form-group">
+                            <label class="form-label" for="id_email">Email</label>
+                            {{ form.email }}
+                        </div>
+                    
+                        <div class="form-group">
+                            <label class="form-label" for="id_password1">Mật khẩu</label>
+                            {{ form.password1 }}
+                        </div>
+                    
+                        <div class="form-group">
+                            <label class="form-label" for="id_password2">Nhập lại mật khẩu</label>
+                            {{ form.password2 }}
+                        </div>
+                    
+                        <button type="submit" class="btn btn-dark d-block w-100 my-4">Đăng ký</button>
+                    </form>
+                    <span class="text-muted text-center d-block fw-bolder my-3">Hoặc có thể</span>
+                    <a href="{% provider_login_url 'facebook' %}" class="btn btn-facebook d-block mb-2">
+                        <i class="ri-facebook-circle-fill align-bottom"></i> Đăng ký bằng Facebook
+                    </a>
+                    
+                    <a href="{% provider_login_url 'google' %}" class="btn btn-danger d-block mb-2">
+                        <i class="ri-google-fill align-bottom"></i> Đăng ký bằng Google
+                    </a>
+                    <p class="d-block text-center text-muted">Bạn đã có tài khoản? <a class="text-muted" href="{% url 'userauths:sign-in' %}">Đăng nhập ngay</a></p>
+                </div>
+            </div>
+        </div>
+        <!-- / Login Form-->
+
+    </section>
+    <!-- / Main Section-->
+{% endblock content %}

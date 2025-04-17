@@ -1,0 +1,312 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block content %}
+<form id="csrf-form" class="d-none">
+    {% csrf_token %}
+</form>
+
+<div class="container-fluid" data-aos="fade-in">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 border-end" id="filter-sidebar">
+            <div class="pt-4 filter-box">
+                <div class="filter-header text-end">
+                    <button id="sidebar-toggle" class="btn btn-light border-0">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                <form method="get" class="border p-3 rounded shadow-sm bg-light">
+                    <!-- Tìm kiếm -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tìm kiếm</label>
+                        <div class="position-relative">
+                            <input type="text" name="search" class="form-control rounded-pill ps-4 pe-5"
+                                   placeholder="Nhập tên sản phẩm..." value="{{ search_query }}">
+                            <i class="fas fa-search position-absolute top-50 end-0 translate-middle pe-3 text-muted"></i>
+                        </div>
+                    </div>
+
+                    <!-- Danh mục -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Danh mục</label>
+                        <select name="category" class="form-select rounded-pill">
+                            <option value="">Tất cả danh mục</option>
+                            {% for category in categories %}
+                                <option value="{{ category.name }}" {% if category.name == selected_category %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Thương hiệu -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Thương hiệu</label>
+                        <select name="brand" class="form-select rounded-pill">
+                            <option value="">Tất cả thương hiệu</option>
+                            {% for brand in brands %}
+                                <option value="{{ brand.id }}" {% if brand.id|stringformat:"s" == selected_brand %}selected{% endif %}>
+                                    {{ brand.name }} ({{ brand.product_count }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Nhãn -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Nhãn sản phẩm</label>
+                        <select name="label" class="form-select rounded-pill">
+                            <option value="">Tất cả nhãn</option>
+                            <option value="sale" {% if selected_label == 'sale' %}selected{% endif %}>Sale</option>
+                            <option value="hot" {% if selected_label == 'hot' %}selected{% endif %}>Hot</option>
+                            <option value="new" {% if selected_label == 'new' %}selected{% endif %}>New</option>
+                        </select>
+                    </div>
+
+                    <!-- Giá -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Khoảng giá</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="text" name="price_min" class="form-control rounded-pill price-input" placeholder="Từ..."
+                                   value="{{ min_price|default:'' }}" oninput="formatPrice(this)">
+                            <span>-</span>
+                            <input type="text" name="price_max" class="form-control rounded-pill price-input" placeholder="Đến..."
+                                   value="{{ max_price|default:'' }}" oninput="formatPrice(this)">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill mt-2">
+                        <i class="fas fa-filter me-1"></i> Áp dụng lọc
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div class="col-lg-9 py-4" id="product-section">
+            {% for category, category_products in products_by_category.items %}
+                {% if category_products %}
+                <div class="category-section mb-5">
+                    <h2 class="fw-bold fs-3 mb-4">{{ category.name }} ({{ category_products|length }})</h2>
+                    <div class="row g-4">
+                        {% for product in category_products %}
+                        <div class="col-12 col-sm-6 col-lg-4">
+                            <div class="card border-0 position-relative overflow-hidden h-100 transparent">
+                                <div class="card-img position-relative">
+                                    <div class="card-badges">
+                                        {% if product.labels == 'sale' %}
+                                            <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-danger rounded-circle d-block me-1"></span> Sale</span>
+                                        {% elif product.labels == 'hot' %}
+                                            <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-warning rounded-circle d-block me-1"></span> Hot</span>
+                                        {% elif product.labels == 'new' %}
+                                            <span class="badge badge-card"><span class="f-w-2 f-h-2 bg-success rounded-circle d-block me-1"></span> New In</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="position-absolute" style="right: 1px; z-index: 1100;">
+                                        <button type="button" class="btn btn-light favorite-btn"
+                                            data-product-id="{{ product.id }}"
+                                            data-is-favorite="{% if product in favorite_products %}true{% else %}false{% endif %}">
+                                            <i class="fa-heart {% if product in favorite_products %}fas text-danger{% else %}far{% endif %}"></i>
+                                        </button>
+                                    </div>
+                                    <picture class="position-relative d-block bg-light product-img-wrapper">
+                                        <img class="w-100 img-fluid product-img"
+                                             src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'assets/images/placeholder.jpg' %}{% endif %}"
+                                             alt="{{ product.name }}" style="height: 300px; object-fit: contain;">
+                                    </picture>
+                                </div>
+                                <div class="card-body px-0">
+                                    <a class="text-decoration-none link-cover" href="{% url 'products:product_detail' product.id %}">
+                                        {{ product.name }}
+                                    </a>
+                                    <small class="text-muted d-block">{{ product.brand.name }} | {{ product.category.name }}</small>
+                                    <p class="mt-2 mb-0 small">
+                                        {% if product.sale_price %}
+                                            <span class="text-danger fs-6">{{ product.sale_price }} VNĐ</span>
+                                            <s class="text-muted ms-2">{{ product.price }} VNĐ</s>
+                                        {% else %}
+                                            <span class="text-danger fs-6">{{ product.price }} VNĐ</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="small text-warning">⭐ {{ product.average_rating }}/5</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .favorite-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    /* ... existing styles ... */
+    
+    /* Better sidebar toggle styles */
+    .row {
+        transition: all 0.4s ease;
+    }
+    
+    #filter-sidebar {
+        transition: all 0.4s ease;
+        width: 25%;
+        max-width: 25%;
+        flex: 0 0 25%;
+        opacity: 1;
+        overflow: hidden;
+        will-change: width, max-width, flex;
+    }
+    
+    #filter-sidebar.sidebar-collapsed {
+        width: 60px;
+        min-width: 60px;
+        max-width: 60px;
+        flex: 0 0 60px;
+    }
+    
+    #filter-sidebar.sidebar-collapsed .filter-box form {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    
+    #filter-sidebar.sidebar-collapsed .filter-header {
+        position: absolute;
+        width: 60px;
+        right: 0;
+        z-index: 10;
+    }
+    
+    /* Improved product section styles */
+    #product-section {
+        transition: all 0.4s ease;
+        width: 75%;
+        flex: 0 0 75%;
+        max-width: 75%;
+        will-change: width, flex, max-width;
+    }
+    
+    #product-section.full-width {
+        width: calc(100% - 60px);
+        flex: 0 0 calc(100% - 60px);
+        max-width: calc(100% - 60px);
+    }
+    
+    /* Prevent image reloading */
+    .product-img-wrapper {
+        overflow: hidden;
+        background-color: #f8f9fa;
+    }
+    
+    .product-img {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        will-change: transform;
+    }
+    
+    @media (max-width: 991.98px) {
+        #filter-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            width: 0;
+            max-width: 320px;
+            height: 100%;
+            overflow-y: auto;
+            background: #fff;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            padding: 0;
+            transform: translateX(-100%);
+            transition: transform 0.4s ease, width 0.4s ease, padding 0.4s ease;
+            will-change: transform, width, padding;
+        }
+
+        /* ... rest of the existing mobile styles ... */
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const filterSidebar = document.getElementById('filter-sidebar');
+        const productSection = document.getElementById('product-section');
+
+        // Preload images to prevent reloading during transitions
+        document.querySelectorAll('.product-img').forEach(img => {
+            if (img.complete) {
+                img.classList.add('loaded');
+            } else {
+                img.onload = function() {
+                    img.classList.add('loaded');
+                };
+            }
+        });
+
+        // Function to handle toggle with improved performance
+        function toggleSidebar() {
+            // Force browser to calculate layout before animation
+            window.requestAnimationFrame(function() {
+                filterSidebar.classList.toggle('sidebar-collapsed');
+                productSection.classList.toggle('full-width');
+
+                // Update icon
+                const icon = sidebarToggle.querySelector('i');
+                if (filterSidebar.classList.contains('sidebar-collapsed')) {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                } else {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                }
+            });
+        }
+
+        // Add event listener
+        if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
+
+        // Format giá (hiển thị có dấu chấm)
+        document.querySelectorAll('.price-input').forEach(input => {
+            if (input.value) {
+                input.value = Number(input.value.replace(/\D/g, '')).toLocaleString('vi-VN');
+            }
+        });
+
+        // Bỏ định dạng trước khi submit
+        document.querySelector('form').addEventListener('submit', function () {
+            document.querySelectorAll('.price-input').forEach(input => {
+                input.value = input.value.replace(/\D/g, '');
+            });
+        });
+    });
+
+    function formatPrice(input) {
+        // Remove non-digits
+        const value = input.value.replace(/\D/g, '');
+        // Format with thousand separators
+        if (value) {
+            input.value = Number(value).toLocaleString('vi-VN');
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% load static %}
+<script src="{% static 'assets/js/vendor.bundle.js' %}"></script>
+<script>
+    // Lấy năm hiện tại và cập nhật vào phần tử có id là 'current-year'
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentYear = new Date().getFullYear();
+        const yearElements = ['current-year', 'current-year2', 'current-year3'];
+        
+        yearElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = currentYear;
+            }
+        });
+    });
+</script>
+<script src="{% static 'assets/js/theme.bundle.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'assets/js/custom.js' %}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var dropdown = document.querySelector(".custom-dropdown");
+        var dropdownMenu = dropdown.querySelector(".custom-dropdown-menu");
+    
+        dropdown.addEventListener("mouseenter", function () {
+            dropdownMenu.classList.add("show");
+        });
+    
+        dropdown.addEventListener("mouseleave", function () {
+            dropdownMenu.classList.remove("show");
+        });
+    
+        dropdown.addEventListener("click", function (event) {
+            event.stopPropagation();
+            dropdownMenu.classList.toggle("show");
+        });
+    
+        document.addEventListener("click", function () {
+            dropdownMenu.classList.remove("show");
+        });
+    });
+    
+</script>
+
+<script>
+    $(document).ready(function () {
+        $(".add-to-cart-btn").click(function (e) {
+            e.preventDefault();
+            let product_id = $(this).data("id");
+            let url = $(this).data("url");
+    
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {
+                    product_id: product_id,
+                    quantity: 1,
+                    csrfmiddlewaretoken: $("input[name=csrfmiddlewaretoken]").val(),
+                },
+                success: function (response) {
+                    if (response.success) {
+                        updateCartDropdown(response.cart_items, response.grand_total);
+                    }
+                },
+            });
+        });
+    
+        function updateCartDropdown(cartItems, grandTotal) {
+            let cartDropdown = $(".dropdown-cart .cart-dropdown");
+            let cartCount = $(".dropdown-cart button");
+            let cartContent = "";
+    
+            if (cartItems.length === 0) {
+                cartContent = `<p class="text-center text-muted">Giỏ hàng trống</p>`;
+            } else {
+                cartItems.forEach((item) => {
+                    cartContent += `
+                        <div class="d-flex align-items-center border-bottom py-2">
+                            <img src="${item.image}" alt="${item.name}" class="me-3" style="width: 50px; height: 50px;">
+                            <div>
+                                <p class="m-0 fw-bold">${item.name}</p>
+                                <p class="text-muted small m-0">Size: ${item.size} / Qty: ${item.quantity}</p>
+                            </div>
+                            <p class="m-0 ms-auto fw-bold">$${item.price}</p>
+                        </div>
+                    `;
+                });
+            }
+    
+            cartDropdown.find(".cart-items-container").html(cartContent);
+            cartDropdown.find(".cart-total-price").text(`$${grandTotal}`);
+            cartCount.html(`Giỏ hàng (${cartItems.length})`);
+        }
+    }); 
+</script>

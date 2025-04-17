@@ -1,0 +1,512 @@
+{% load static %}
+{% load product_filters %}
+<!-- Add these scripts at the top -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<div class="row">
+    <div class="col-md-6">
+        
+        <div class="product-main-image text-center position-relative mx-auto" style="max-width: 80%;">
+            <img id="main-product-image" src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid" style="max-height: 350px; object-fit: contain;">
+            <button class="nav-btn prev-btn" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-btn next-btn" onclick="nextImage()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="product-thumbnails mt-3 d-flex flex-wrap justify-content-center">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail m-1 thumb-img" onclick="updateMainImage('{{ product.image.url }}')">
+            {% for image in product.images.all %}
+                <img src="{{ image.image.url }}" alt="{{ product.name }}" class="img-thumbnail m-1 thumb-img" onclick="updateMainImage('{{ image.image.url }}')">
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <!-- Add this near the top of the product details section -->
+        <div class="mb-3">
+            <a href="{% url 'products:all_products' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách sản phẩm
+            </a>
+        </div>
+        <div class="product-details">
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="text-muted small fw-bold text-uppercase">Thương hiệu: {{ product.brand.name }}</p>
+                <button class="btn favorite-btn" 
+        data-product-id="{{ product.id }}"
+        data-is-favorite="{% if is_favorite %}true{% else %}false{% endif %}">
+        <i class="fas fa-heart"></i>
+    </button>
+            </div>
+            <h1 class="fw-bold">{{ product.name }}</h1>
+            <div class="price-container">
+                {% if product.sale_price %}
+                    <p class="mb-0">
+                        <span class="fs-4 text-danger">{{ product.sale_price }} VNĐ</span>
+                        <span class="text-muted text-decoration-line-through ms-2">{{ product.price }} VNĐ</span>
+                    </p>
+                    <p class="text-success small">
+                        <i class="fas fa-tag"></i>
+                        Tiết kiệm {{ product.price|subtract:product.sale_price }} VNĐ
+                    </p>
+                {% else %}
+                    <p class="fs-4 text-danger">{{ product.price }} VNĐ</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <form id="add-to-cart-form" method="post" action="{% url 'cart:add_to_cart' %}">
+            {% csrf_token %}
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+
+            <!-- Chọn Size -->
+            <div class="product-option">
+                <label class="fw-bold">Size: <span id="selected-size" class="text-primary"></span></label>
+                <div class="option-group">
+                    {% for size_info in sizes_with_inventory %}
+                        <div class="option-box {% if not size_info.available %}disabled{% endif %}" 
+                             onclick="{% if size_info.available %}selectOption('size{{ size_info.size.id }}', '{{ size_info.size.name }}', 'selected-size'){% endif %}">
+                            <input type="radio" 
+                                   name="size" 
+                                   id="size{{ size_info.size.id }}" 
+                                   value="{{ size_info.size.name }}" 
+                                   class="d-none"
+                                   {% if not size_info.available %}disabled{% endif %}>
+                            <label for="size{{ size_info.size.id }}">
+                                {{ size_info.size.name }}
+                                {% if not size_info.available %}
+                                    <span class="text-danger">(Hết hàng)</span>
+                                {% else %}
+                                    <span class="text-success">(Còn {{ size_info.quantity }})</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Chọn Màu -->
+            <div class="product-option">
+                <label class="fw-bold">Màu sắc: <span id="selected-color" class="text-primary"></span></label>
+                <div class="option-group">
+                    {% for color in product.colors.all %}
+                        <div class="option-box color-option" onclick="selectOption('color{{ color.id }}', '{{ color.name }}', 'selected-color')">
+                            <input type="radio" name="color" id="color{{ color.id }}" value="{{ color.name }}" class="d-none">
+                            <label for="color{{ color.id }}" style="background-color: {{ color.code }};">
+                                <span class="color-name">{{ color.name }}</span>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="button" class="btn btn-dark mt-3 px-5" onclick="validateSelection()">Thêm vào giỏ</button>
+            </div>
+        </form>
+
+        <div class="accordion mt-4" id="accordionProduct">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false">
+                        Thông tin sản phẩm
+                    </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionProduct">
+                    <div class="accordion-body">
+                        <p>{{ product.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentImageIndex = 0;
+    const images = [
+        '{{ product.image.url }}'{% for image in product.images.all %},
+        '{{ image.image.url }}'
+        {% endfor %}
+    ];
+
+    function updateMainImage(url) {
+        const mainImage = document.getElementById('main-product-image');
+        mainImage.style.opacity = '0';
+        
+        setTimeout(() => {
+            mainImage.src = url;
+            mainImage.style.opacity = '1';
+            currentImageIndex = images.indexOf(url);
+            
+            // Update active state of thumbnails
+            document.querySelectorAll('.thumb-img').forEach(thumb => {
+                thumb.classList.remove('active');
+                if (thumb.src === url) {
+                    thumb.classList.add('active');
+                }
+            });
+        }, 200);
+    }
+
+    function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        updateMainImage(images[currentImageIndex]);
+    }
+
+    function prevImage() {
+        currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+        updateMainImage(images[currentImageIndex]);
+    }
+
+    function selectOption(inputId, value, displayId) {
+        // Remove selected state from all options in the same group
+        const group = document.getElementById(inputId).name;
+        document.querySelectorAll(`input[name="${group}"]`).forEach(input => {
+            input.parentElement.classList.remove('selected');
+        });
+        
+        // Add selected state to clicked option
+        document.getElementById(inputId).checked = true;
+        document.getElementById(inputId).parentElement.classList.add('selected');
+        document.getElementById(displayId).innerText = value;
+    }
+
+    function validateSelection() {
+        if (!document.querySelector('input[name="size"]:checked')) {
+            alert("Vui lòng chọn size!");
+            return;
+        }
+        if (!document.querySelector('input[name="color"]:checked')) {
+            alert("Vui lòng chọn màu!");
+            return;
+        }
+        document.getElementById('add-to-cart-form').submit();
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set initial active thumbnail
+        const firstThumb = document.querySelector('.thumb-img');
+        if (firstThumb) {
+            firstThumb.classList.add('active');
+        }
+
+        // Add transition to main image
+        const mainImage = document.getElementById('main-product-image');
+        mainImage.style.transition = 'opacity 0.3s ease';
+
+        const imageContainer = document.querySelector('.product-main-image');
+        let startX = 0;
+        let isDragging = false;
+    
+        function handleDragStart(e) {
+            isDragging = true;
+            startX = e.type === 'mousedown' ? e.pageX : e.touches[0].pageX;
+            imageContainer.style.cursor = 'grabbing';
+        }
+    
+        function handleDragMove(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            const currentX = e.type === 'mousemove' ? e.pageX : e.touches[0].pageX;
+            const diff = currentX - startX;
+    
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    prevImage();
+                } else {
+                    nextImage();
+                }
+                isDragging = false;
+                imageContainer.style.cursor = 'grab';
+            }
+        }
+    
+        function handleDragEnd() {
+            isDragging = false;
+            imageContainer.style.cursor = 'grab';
+        }
+    
+        // Mouse Events
+        imageContainer.addEventListener('mousedown', handleDragStart);
+        window.addEventListener('mousemove', handleDragMove);
+        window.addEventListener('mouseup', handleDragEnd);
+    
+        // Touch Events
+        imageContainer.addEventListener('touchstart', handleDragStart);
+        window.addEventListener('touchmove', handleDragMove, { passive: false });
+        window.addEventListener('touchend', handleDragEnd);
+    });
+</script>
+
+<style>
+    .custom-toast {
+        padding: 12px 24px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .custom-toast i {
+        font-size: 16px;
+    }
+    .product-main-image {
+        position: relative;
+        overflow: hidden;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        cursor: grab;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: pan-x;
+    }
+    
+    .product-main-image:active {
+        cursor: grabbing;
+    }
+    
+    .product-main-image img {
+        pointer-events: none;
+        transition: transform 0.4s ease;
+    }
+    .product-main-image:hover img {
+        transform: scale(1.02);
+    }
+    .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 0;
+    }
+    .product-main-image:hover .nav-btn {
+        opacity: 1;
+    }
+    .nav-btn:hover {
+        background: #fff;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        transform: translateY(-50%) scale(1.1);
+    }
+    .prev-btn {
+        left: 20px;
+    }
+    .next-btn {
+        right: 20px;
+    }
+    .product-thumbnails img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    .product-thumbnails img:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .product-thumbnails img.active {
+        border-color: #000;
+        transform: scale(1.05);
+    }
+    /* Product Options Styling */
+    .product-option {
+        margin-bottom: 1.5rem;
+    }
+    
+    .option-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+    
+    /* Size Options */
+    .option-box {
+        padding: 8px 16px;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        text-align: center;
+        border-radius: 5px;
+        transition: all 0.2s ease;
+    }
+    
+    .option-box.disabled {
+        opacity: 0.6;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+    
+    .option-box.disabled label {
+        color: #999;
+        text-decoration: line-through;
+    }
+    
+    .option-box:hover {
+        border-color: #212529;
+    }
+    
+    .option-box.selected {
+        background-color: #212529;
+        border-color: #212529;
+        color: #fff;
+    }
+    
+    .option-box label {
+        cursor: pointer;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+    
+    /* Color Options */
+    .option-box.color-option {
+        padding: 0;
+        border: none;
+        background: none;
+    }
+    
+    .color-option label {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        cursor: pointer;
+        position: relative;
+        display: block;
+        transition: all 0.2s ease;
+    }
+    
+    .color-option:hover label {
+        transform: scale(1.1);
+        border-color: #212529;
+    }
+    
+    .color-option input:checked + label {
+        border-color: #212529;
+        transform: scale(1.1);
+    }
+    
+    /* Hide color name text */
+    .color-name {
+        display: none;
+    }
+    .price-container {
+        margin: 1rem 0;
+    }
+
+    .text-decoration-line-through {
+        text-decoration: line-through;
+        opacity: 0.7;
+    }
+    .favorite-btn {
+        background: transparent;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .favorite-btn i {
+        font-size: 24px;
+        color: #212529;
+        transition: all 0.3s ease;
+        -webkit-text-stroke: 2px #212529;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .favorite-btn[data-is-favorite="true"] i {
+        -webkit-text-stroke: 2px #dc3545;
+        -webkit-text-fill-color: #dc3545;
+    }
+
+    .favorite-btn:hover i {
+        transform: scale(1.1);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const favoriteBtn = document.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                {% if request.user.is_authenticated %}
+                    const productId = this.dataset.productId;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    fetch('/favorites/toggle-favorite/' + productId + '/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            this.dataset.isFavorite = data.is_favorite;
+                            const icon = this.querySelector('i');
+                            if (data.is_favorite) {
+                                Toastify({
+                                    text: "✓ Bạn đã thêm sản phẩm vào yêu thích",
+                                    className: "custom-toast",
+                                    duration: 3000,
+                                    gravity: "top",
+                                    position: "right",
+                                    style: {
+                                        background: "#22c55e",
+                                        color: "white"
+                                    },
+                                    offset: {
+                                        y: 60
+                                    }
+                                }).showToast();
+                                icon.style.webkitTextStroke = '2px #dc3545';
+                                icon.style.webkitTextFillColor = '#dc3545';
+                            } else {
+                                Toastify({
+                                    text: "✓ Đã xoá khỏi yêu thích",
+                                    className: "custom-toast",
+                                    duration: 3000,
+                                    gravity: "top",
+                                    position: "right",
+                                    style: {
+                                        background: "#22c55e",
+                                        color: "white"
+                                    },
+                                    offset: {
+                                        y: 60
+                                    }
+                                }).showToast();
+                                icon.style.webkitTextStroke = '2px #212529';
+                                icon.style.webkitTextFillColor = 'transparent';
+                            }
+                        }
+                    });
+                {% else %}
+                    window.location.href = "{% url 'userauths:sign-in' %}";
+                {% endif %}
+            });
+        }
+    });
+</script>

@@ -1,0 +1,52 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+{% comment %} <section class="mt-0 vh-lg-100">
+    <div class="container">
+        <div class="row g-0 vh-lg-100">
+            <div class="col-12 pt-5 pt-lg-10">
+                <div class="alert alert-success text-center" role="alert">
+                    <h4 class="alert-heading">Đặt hàng thành công!</h4>
+                    <p>Cảm ơn bạn đã mua hàng. Chúng tôi sẽ xác nhận đơn hàng của bạn ngay lập tức.</p>
+                    <p class="mb-0">
+                        <a href="{% url 'core:index' %}" class="btn btn-dark">Tiếp tục mua sắm</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %} {% endcomment %}
+
+<section class="mt-0 vh-lg-100">
+    <div class="container">
+        <div class="row g-0 vh-lg-100">
+            <div class="col-12 pt-5 pt-lg-10">
+                <div class="alert alert-success text-center" role="alert">
+                    <h4 class="alert-heading">Đặt hàng thành công!</h4>
+                    <p>Cảm ơn bạn đã mua hàng. Chúng tôi sẽ xác nhận đơn hàng của bạn ngay lập tức.</p>
+                    <p>Tự động chuyển về trang chủ sau <span id="countdown">5</span> giây</p>
+                    <p class="mb-0">
+                        <a href="{% url 'core:index' %}" class="btn btn-dark">Tiếp tục mua sắm</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    let timeLeft = 5;
+    const countdownElement = document.getElementById('countdown');
+    
+    const countdown = setInterval(function() {
+        timeLeft--;
+        countdownElement.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            window.location.href = "{% url 'core:index' %}";
+        }
+    }, 1000);
+</script>
+{% endblock content %}

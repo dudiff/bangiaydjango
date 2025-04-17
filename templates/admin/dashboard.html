@@ -1,0 +1,738 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    /* Giữ nguyên style cho info-box và card */
+    .info-box {
+        border-radius: 0.25rem;
+        background-color: #fff;
+        display: flex;
+        margin-bottom: 1rem;
+        min-height: 80px;
+        padding: .5rem;
+        position: relative;
+        transition: all .3s;
+    }
+    .info-box:hover {
+        transform: translateY(-3px);
+    }
+    .info-box-icon {
+        border-radius: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        font-size: 30px;
+        color: #fff;
+    }
+    .info-box-content {
+        padding: 5px 10px;
+        flex: 1;
+    }
+    .info-box-number {
+        font-size: 24px;
+        font-weight: 700;
+    }
+    .info-box-text {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .card {
+        transition: all .3s;
+        margin-bottom: 1rem;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    }
+    .card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,.1);
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Tối ưu style cho modal */
+    .modal-backdrop {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 1040 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+    
+    .modal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 1050 !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        outline: 0 !important;
+        background: transparent !important;
+    }
+    
+    .modal-dialog {
+        position: relative !important;
+        width: auto !important;
+        margin: 1.75rem auto !important;
+        max-width: 900px !important;
+        pointer-events: all !important;
+        z-index: 1070 !important;
+    }
+    
+    .modal-content {
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        background-color: #fff !important;
+        border: 1px solid rgba(0, 0, 0, 0.2) !important;
+        border-radius: 0.3rem !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        pointer-events: auto !important;
+        z-index: 1080 !important;
+    }
+
+    .modal.show .modal-dialog {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .modal-header {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        border-top-left-radius: calc(0.3rem - 1px);
+        border-top-right-radius: calc(0.3rem - 1px);
+    }
+
+    .modal-body {
+        position: relative;
+        flex: 1 1 auto;
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        display: flex;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0.75rem;
+        border-top: 1px solid #dee2e6;
+        border-bottom-right-radius: calc(0.3rem - 1px);
+        border-bottom-left-radius: calc(0.3rem - 1px);
+    }
+
+    body.modal-open {
+        overflow: hidden;
+        padding-right: 17px;
+    }
+
+    .table {
+        width: 100%;
+        margin-bottom: 1rem;
+        background-color: transparent;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xóa tất cả backdrop cũ khi trang tải xong
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        
+        // Xử lý modal
+        const modalTriggers = document.querySelectorAll('[data-bs-toggle="modal"]');
+        
+        modalTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function() {
+                const targetModal = document.querySelector(this.getAttribute('data-bs-target'));
+                
+                // Xóa tất cả backdrop cũ
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                
+                // Đảm bảo z-index của modal cao hơn
+                if (targetModal) {
+                    targetModal.style.zIndex = '1060';
+                    
+                    // Đảm bảo backdrop có z-index thấp hơn modal
+                    setTimeout(() => {
+                        document.querySelectorAll('.modal-backdrop').forEach(el => {
+                            el.style.zIndex = '1050';
+                            el.style.opacity = '0.5';
+                        });
+                    }, 10);
+                }
+            });
+        });
+        
+        // Xử lý nút đóng
+        document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+           button.addEventListener('click', function() {
+               const modal = this.closest('.modal');
+               document.activeElement.blur();
+               // Với Bootstrap 4, dùng jQuery để ẩn modal
+               $(modal).modal('hide');
+
+               // Cleanup (có thể không cần nếu Bootstrap tự làm)
+               document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+               document.body.classList.remove('modal-open');
+               document.body.style.overflow = '';
+               document.body.style.paddingRight = '';
+           });
+        });
+
+        
+        // Xử lý khi modal đóng để đảm bảo dọn dẹp
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Giữ nguyên phần HTML cho dashboard -->
+<div class="container-fluid">
+    <!-- Giữ nguyên các info boxes -->
+    <div class="row">
+        <!-- Info boxes -->
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Đơn hàng đã hoàn thành</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#completedOrdersModal">
+                        {{ completed_orders }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Đơn hàng đã bị huỷ</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#cancelledOrdersModal">
+                        {{ cancelled_orders }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-info"><i class="fas fa-shopping-cart"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Tổng đơn hàng</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#allOrdersModal">
+                        {{ total_orders }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-purple"><i class="fas fa-box"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Tổng sản phẩm (Tồn kho)</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#productsModal">
+                        {{ total_products }} ({{ total_stock }})
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-warning"><i class="fas fa-money-bill"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Tổng tiền nhập</span>
+                    <span class="info-box-number">{{ total_import_cost|floatformat:0 }} VNĐ</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-primary"><i class="fas fa-dollar-sign"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Tổng doanh thu</span>
+                    <span class="info-box-number">{{ total_revenue|floatformat:0 }} VNĐ</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-info"><i class="fas fa-building"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Nhà cung cấp</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#suppliersModal">
+                        {{ suppliers_count }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <!-- New import orders box -->
+        <div class="col-md-3 col-sm-6 col-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-truck-loading"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Đơn nhập hàng</span>
+                    <span class="info-box-number" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#importOrdersModal">
+                        {{ import_orders_count }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Giữ nguyên phần filter -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="form-group m-0">
+                        <label for="dateFilter" class="mr-2">Lọc theo ngày:</label>
+                        <input type="date" id="dateFilter" class="form-control d-inline-block" style="width: 200px;" value="{{ today|date:'Y-m-d' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Giữ nguyên phần charts -->
+    <div class="row">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><strong>Thống kê đơn hàng trong ngày</strong></div>
+                    <div class="card-body p-2">
+                        <canvas id="dailyChart" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>          
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Đơn hàng hàng tháng</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="orderBarChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Doanh thu so với chi phí nhập khẩu</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueDonutChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Giữ nguyên các modal -->
+<div class="modal fade" id="completedOrdersModal" tabindex="-1" aria-labelledby="completedOrdersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completedOrdersModalLabel">Danh sách đơn hàng đã hoàn thành</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in completed_orders_list %}
+                            <tr>
+                                <td>{{ order.order_code }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.created_at|date:"d/m/Y" }}</td>
+                                <td>{{ order.total_amount|floatformat:0 }} VNĐ</td>
+                                <td><span class="badge bg-success">Hoàn thành</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="productsModal" tabindex="-1" aria-labelledby="productsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productsModalLabel">Danh sách sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã SP</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Thương hiệu</th>
+                                <th>Giá bán</th>
+                                <th>Tồn kho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products_list %}
+                            <tr>
+                                <td>{{ product.product_code }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.category.name }}</td>
+                                <td>{{ product.brand.name }}</td>
+                                <td>{{ product.price|floatformat:0 }} VNĐ</td>
+                                <td>{{ product.stock }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="cancelledOrdersModal" tabindex="-1" aria-labelledby="cancelledOrdersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelledOrdersModalLabel">Danh sách đơn hàng đã huỷ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in cancelled_orders_list %}
+                            <tr>
+                                <td>{{ order.order_code }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.created_at|date:"d/m/Y" }}</td>
+                                <td>{{ order.total_amount|floatformat:0 }} VNĐ</td>
+                                <td><span class="badge bg-danger">Đã huỷ</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="allOrdersModal" tabindex="-1" aria-labelledby="allOrdersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="allOrdersModalLabel">Danh sách tất cả đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Ngày đặt</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in all_orders_list %}
+                            <tr>
+                                <td>{{ order.order_code }}</td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.created_at|date:"d/m/Y" }}</td>
+                                <td>{{ order.total_amount|floatformat:0 }} VNĐ</td>
+                                <td>
+                                    {% if order.status == 'completed' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                    {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Đã huỷ</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Đang xử lý</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- New Suppliers Modal -->
+<div class="modal fade" id="suppliersModal" tabindex="-1" aria-labelledby="suppliersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="suppliersModalLabel">Danh sách nhà cung cấp</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên nhà cung cấp</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Địa chỉ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for supplier in suppliers_list %}
+                            <tr>
+                                <td>{{ supplier.id }}</td>
+                                <td>{{ supplier.name }}</td>
+                                <td>{{ supplier.email }}</td>
+                                <td>{{ supplier.phone }}</td>
+                                <td>{{ supplier.address }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Import Orders Modal -->
+<div class="modal fade" id="importOrdersModal" tabindex="-1" aria-labelledby="importOrdersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importOrdersModalLabel">Danh sách đơn nhập hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Người tạo</th>
+                                <th>Ngày tạo</th>
+                                <th>Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in import_orders_list %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>{{ order.supplier.name }}</td>
+                                <td>{{ order.created_by.username }}</td>
+                                <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>{{ order.total_amount|floatformat:0 }} VNĐ</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+{{ chart_data|json_script:"chart-data" }}
+{{ financial_data|json_script:"financial-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let orderBarChart = null;
+    let revenueDonutChart = null;
+    let dailyChart = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+        const financialData = JSON.parse(document.getElementById('financial-data').textContent);
+
+        const completed = chartData.completed || [];
+        const cancelled = chartData.cancelled || [];
+        const total = chartData.total || [];
+        const labels = chartData.labels || [];
+
+        const formattedLabels = labels.map(label => {
+            try {
+                const [monthStr, yearStr] = label.split(' ');
+                const date = new Date(`${monthStr} 1, ${yearStr}`);
+                return `Tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
+            } catch (err) {
+                return label;
+            }
+        });
+
+        // Biểu đồ theo tháng
+        if (formattedLabels.length > 0) {
+            const ctxBar = document.getElementById("orderBarChart").getContext("2d");
+            orderBarChart = new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: formattedLabels,
+                    datasets: [
+                        { label: "Đã giao", data: completed, backgroundColor: "#00c853" },
+                        { label: "Bị huỷ", data: cancelled, backgroundColor: "#d50000" },
+                        { label: "Tổng đơn", data: total, backgroundColor: "#2962ff" }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: "top" } }
+                }
+            });
+        }
+
+        // Biểu đồ donut
+        const ctxDonut = document.getElementById("revenueDonutChart").getContext("2d");
+        revenueDonutChart = new Chart(ctxDonut, {
+            type: "doughnut",
+            data: {
+                labels: financialData.labels,
+                datasets: [{
+                    label: "Tài chính",
+                    data: financialData.data,
+                    backgroundColor: ["#00c853", "#ff9100"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: "bottom" } }
+            }
+        });
+
+        // Lọc theo ngày -> cập nhật dailyChart
+        const dateInput = document.getElementById("dateFilter");
+        dateInput.addEventListener("change", function () {
+            const selectedDate = this.value;
+            const url = new URL(window.location.href);
+            url.searchParams.set("date", selectedDate);
+
+            fetch(url, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const daily = data.daily || {};
+                const dailyLabels = ["Đã giao", "Bị huỷ", "Tổng đơn"];
+                const dailyData = [
+                    daily.completed || 0,
+                    daily.cancelled || 0,
+                    daily.total || 0
+                ];
+            
+                if (dailyChart) dailyChart.destroy();
+                const ctxDaily = document.getElementById("dailyChart").getContext("2d");
+                dailyChart = new Chart(ctxDaily, {
+                    type: "bar",
+                    data: {
+                        labels: dailyLabels,
+                        datasets: [{
+                            label: "Thống kê đơn trong ngày",
+                            data: dailyData,
+                            backgroundColor: ["#00c853", "#d50000", "#2962ff"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        }
+                    }
+                });
+            })            
+            .catch(err => console.error("❌ Lỗi khi fetch daily data:", err));
+        });
+    });
+</script>
+{% endblock %}

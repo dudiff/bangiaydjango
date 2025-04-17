@@ -1,0 +1,113 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Head -->
+    {% include 'partials/header/head/head.html' %}
+    <!-- /Head -->
+     
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white flex-column border-0">
+        <div class="container-fluid">
+            <div class="w-100">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <a class="navbar-brand d-flex align-items-center me-3" href="{% url 'core:index' %}">
+                        <img class="logo-img" src="{% static 'assets/images/logos/DStore2.png' %}" alt="DStore Logo" width="50" height="auto" style="margin-left: 70px;">
+                    </a>
+                    <!-- Navbar Icons-->
+                    <ul class="list-unstyled mb-0 d-flex align-items-center order-1 order-lg-2 nav-sidelinks">
+                        <!-- Mobile Nav Toggler-->
+                        <li class="d-lg-none">
+                            <span class="nav-link text-body d-flex align-items-center cursor-pointer" data-bs-toggle="collapse"
+                                data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+                                aria-label="Toggle navigation"><i class="ri-menu-line ri-lg me-1"></i> Menu</span>
+                        </li>
+                        <!-- Navbar Search-->
+                        <li class="d-none d-sm-block">
+                            <span class="nav-link text-body search-trigger cursor-pointer">
+                                <i class="fa fa-search"></i>
+                            </span>                            
+                            <!-- Search navbar overlay-->
+                            <div class="navbar-search d-none">
+                                <form action="{% url 'products:all_products' %}" method="get">
+                                    <div class="input-group mb-3 h-100">
+                                        <span class="input-group-text px-4 bg-transparent border-0">
+                                            <i class="ri-search-line ri-lg"></i>
+                                        </span>
+                                        <input type="text" name="search" class="form-control text-body bg-transparent border-0"
+                                            placeholder="Nhập sản phẩm bạn muốn tìm...">
+                                        <button type="submit" class="d-none"></button>
+                                        <span class="input-group-text px-4 cursor-pointer disable-child-pointer close-search bg-transparent border-0">
+                                            <i class="ri-close-circle-line ri-lg"></i>
+                                        </span>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="search-overlay"></div>
+                            <!-- / Search navbar overlay-->
+                        </li>
+                        <!-- /Navbar Search-->
+                        <!-- Navbar Login-->
+                        {% include 'userauths/useracc.html' %}
+                        <!-- /Navbar Login-->
+                        <!-- Navbar Cart Icon-->
+                        {% include 'partials/cart/cart-dropdown.html' %}
+                        <!-- /Navbar Cart Icon-->
+                    </ul>
+                    <!-- Main Navigation-->
+                    <div class="flex-shrink-0 collapse navbar-collapse navbar-collapse-light w-auto flex-grow-1 order-2 order-lg-1"
+                        id="navbarNavDropdown">
+                        <!-- Menu-->
+                        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                            {% include 'partials/product/men/menumen.html' %}
+                            {% include 'partials/product/women/menuwomen.html' %}
+                            {% include 'partials/product/kids/menukids.html' %}
+                            <li class="nav-item d-none d-lg-block">
+                                <span class="nav-link" style="cursor: default; color:rgb(0, 2, 3);">|</span>
+                            </li>
+                            {% include 'partials/product/brands/menubrands.html' %}
+                            {% include 'partials/pages/info.html' %}
+                        </ul>
+                    </div>
+                    <!-- / Main Navigation-->
+                </div>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <script>
+                    setTimeout(() => {
+                        $(".alert").alert('close');
+                    }, 5000)
+                </script>
+            </div>
+        </div>
+    </nav>
+    <!-- / Navbar-->
+    {% block content %}
+    {% endblock content %}
+    <!-- Footer-->
+    {% include 'partials/footer/footer.html' %}
+    <!-- / Footer-->
+
+    <!-- Theme JS -->
+    {% include 'partials/script.html' %}
+    <!-- Vendor JS -->    
+    {% block overlay_content %}
+    {% endblock overlay_content %}
+    {% block extra_css %}
+    {% endblock %}
+    {% block extrastyle %}
+    {% endblock %}
+    {% block extrahead %}
+    {% endblock %}
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>

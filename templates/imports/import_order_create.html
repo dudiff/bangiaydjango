@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo đơn nhập hàng | D-Store</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+            border-color: #c0392b;
+        }
+        
+        .table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+    </style>
+    {% load static %}
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-plus-circle"></i> Tạo đơn nhập hàng</h2>
+                <p class="text-muted">Điền thông tin để tạo đơn nhập hàng mới</p>
+            </div>
+            <a href="{% url 'imports:import_order_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+        
+        <form method="post" id="importOrderForm">
+            {% csrf_token %}
+            
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-info-circle"></i> Thông tin chung</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- First, update the supplier selection section to trigger product loading -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="supplier" class="form-label">Nhà cung cấp <span class="text-danger">*</span></label>
+                                <select name="supplier" id="supplier" class="form-select" required>
+                                    <option value="">Chọn nhà cung cấp</option>
+                                    {% for supplier in suppliers %}
+                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Then, update the JavaScript to load products based on supplier selection -->
+                        <script>
+                            $(document).ready(function() {
+                                // Object to store product-size-price combinations
+                                var productSizePrices = {};
+                                // Object to store product prices
+                                var productPrices = {};
+                                
+                                // Handle supplier selection change
+                                $('#supplier').change(function() {
+                                    var supplierId = $(this).val();
+                                    
+                                    // Clear all product dropdowns
+                                    $('.product-select').empty();
+                                    $('.product-select').append('<option value="">Chọn sản phẩm</option>');
+                                    
+                                    // Clear all size dropdowns
+                                    $('.size-select').empty();
+                                    $('.size-select').append('<option value="">Chọn kích cỡ</option>');
+                                    
+                                    // Reset subtotals and total
+                                    $('.subtotal').text('0');
+                                    calculateTotal();
+                                    
+                                    if (supplierId) {
+                                        // Show loading indicator
+                                        $('.product-select').append('<option value="" disabled>Đang tải sản phẩm...</option>');
+                                        
+                                        // Fetch products for the selected supplier
+                                        $.ajax({
+                                            url: '{% url "imports:get_supplier_products" %}',
+                                            data: {
+                                                'supplier_id': supplierId
+                                            },
+                                            dataType: 'json',
+                                            success: function(data) {
+                                                // Clear loading indicator
+                                                $('.product-select').empty();
+                                                $('.product-select').append('<option value="">Chọn sản phẩm</option>');
+                                                
+                                                // Add options for each product
+                                                $.each(data, function(i, product) {
+                                                    $('.product-select').append($('<option></option>')
+                                                        .attr('value', product.id)
+                                                        .text(product.name));
+                                                    
+                                                    // Store product price
+                                                    productPrices[product.id] = product.price;
+                                                });
+                                            },
+                                            error: function(xhr, status, error) {
+                                                console.error("Lỗi khi tải sản phẩm:", error);
+                                                $('.product-select').empty();
+                                                $('.product-select').append('<option value="">Lỗi tải sản phẩm</option>');
+                                            }
+                                        });
+                                    }
+                                });
+                                
+                                // Rest of your existing JavaScript for product selection, etc.
+                                // Handle product selection change
+                                $(document).on('change', '.product-select', function() {
+                                    var productId = $(this).val();
+                                    var row = $(this).closest('tr');
+                                    var sizeSelect = row.find('.size-select');
+                                    
+                                    if (productId) {
+                                        // Clear current options
+                                        sizeSelect.empty();
+                                        sizeSelect.append('<option value="">Đang tải kích cỡ...</option>');
+                                        
+                                        // Fetch sizes for the selected product
+                                        $.ajax({
+                                            url: '{% url "imports:get_product_sizes" %}',
+                                            data: {
+                                                'product_id': productId
+                                            },
+                                            dataType: 'json',
+                                            success: function(data) {
+                                                sizeSelect.empty();
+                                                sizeSelect.append('<option value="">Chọn kích cỡ</option>');
+                                                
+                                                // Add options for each size
+                                                $.each(data, function(i, size) {
+                                                    sizeSelect.append($('<option></option>')
+                                                        .attr('value', size.id)
+                                                        .text(size.name));
+                                                });
+                                                
+                                                // Select the first size option if available
+                                                if (data.length > 0) {
+                                                    sizeSelect.val(data[0].id);
+                                                    sizeSelect.trigger('change'); // Trigger change to load price if available
+                                                }
+                                            },
+                                            error: function(xhr, status, error) {
+                                                console.error("Lỗi khi tải kích cỡ:", error);
+                                                sizeSelect.empty();
+                                                sizeSelect.append('<option value="">Lỗi tải kích cỡ</option>');
+                                            }
+                                        });
+                                    } else {
+                                        // If no product selected, clear size select
+                                        sizeSelect.empty();
+                                        sizeSelect.append('<option value="">Chọn kích cỡ</option>');
+                                    }
+                                });
+                                
+                                // The rest of your existing JavaScript remains unchanged
+                            });
+                        </script>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Ghi chú</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="Nhập ghi chú cho đơn hàng (nếu có)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Chi tiết đơn hàng</h5>
+                    <button type="button" class="btn btn-sm btn-primary" id="addItemBtn" disabled>
+                        <i class="fas fa-plus"></i> Thêm sản phẩm
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info supplier-message">
+                        <i class="fas fa-info-circle"></i> Vui lòng chọn nhà cung cấp trước để hiển thị danh sách sản phẩm của họ.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Kích cỡ</th>
+                                    <th>Số lượng</th>
+                                    <th>Giá nhập</th>
+                                    <th>Thành tiền</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="item-row">
+                                    <td>
+                                        <select name="product[]" class="form-select product-select" required>
+                                            <option value="">Chọn sản phẩm</option>
+                                            <!-- Products will be loaded dynamically after supplier selection -->
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="size[]" class="form-select size-select" required>
+                                            <option value="">Chọn kích cỡ</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="quantity[]" class="form-control quantity-input" min="1" value="1" required>
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="number" name="purchase_price[]" class="form-control price-input" min="0" value="0" required>
+                                            <span class="input-group-text">VNĐ</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="subtotal badge bg-secondary p-2 w-100 text-end">0</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-danger remove-item">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                                    <td><span id="totalAmount" class="fw-bold">0</span> VNĐ</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i> Vui lòng điền đầy đủ thông tin cho mỗi sản phẩm.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-end">
+                <a href="{% url 'imports:import_order_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Tạo đơn nhập hàng
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Object to store product-size-price combinations
+            var productSizePrices = {};
+            // Object to store product prices
+            var productPrices = {};
+            
+            // Hide/show supplier message
+            $('#supplier').change(function() {
+                if ($(this).val()) {
+                    $('.supplier-message').hide();
+                    $('#addItemBtn').prop('disabled', false); // Enable the add item button
+                } else {
+                    $('.supplier-message').show();
+                    $('#addItemBtn').prop('disabled', true); // Disable the add item button
+                }
+            });
+            
+            // Handle supplier selection change
+            $('#supplier').change(function() {
+                var supplierId = $(this).val();
+                
+                // Clear all product dropdowns
+                $('.product-select').empty();
+                $('.product-select').append('<option value="">Chọn sản phẩm</option>');
+                
+                // Clear all size dropdowns
+                $('.size-select').empty();
+                $('.size-select').append('<option value="">Chọn kích cỡ</option>');
+                
+                // Reset subtotals and total
+                $('.subtotal').text('0');
+                calculateTotal();
+                
+                if (supplierId) {
+                    // Show loading indicator
+                    $('.product-select').append('<option value="" disabled>Đang tải sản phẩm...</option>');
+                    
+                    // Fetch products for the selected supplier
+                    $.ajax({
+                        url: '{% url "imports:get_supplier_products" %}',
+                        data: {
+                            'supplier_id': supplierId
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            // Clear loading indicator
+                            $('.product-select').empty();
+                            $('.product-select').append('<option value="">Chọn sản phẩm</option>');
+                            
+                            // Add options for each product
+                            $.each(data, function(i, product) {
+                                $('.product-select').append($('<option></option>')
+                                    .attr('value', product.id)
+                                    .text(product.name));
+                                
+                                // Store product price
+                                productPrices[product.id] = product.price;
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Lỗi khi tải sản phẩm:", error);
+                            $('.product-select').empty();
+                            $('.product-select').append('<option value="">Lỗi tải sản phẩm</option>');
+                        }
+                    });
+                }
+            });
+            
+            // Handle product selection change
+            $(document).on('change', '.product-select', function() {
+                var productId = $(this).val();
+                var row = $(this).closest('tr');
+                var sizeSelect = row.find('.size-select');
+                
+                if (productId) {
+                    // Clear current options
+                    sizeSelect.empty();
+                    sizeSelect.append('<option value="">Đang tải kích cỡ...</option>');
+                    
+                    // Fetch sizes for the selected product
+                    $.ajax({
+                        url: '{% url "imports:get_product_sizes" %}',
+                        data: {
+                            'product_id': productId
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            sizeSelect.empty();
+                            sizeSelect.append('<option value="">Chọn kích cỡ</option>');
+                            
+                            // Add options for each size
+                            $.each(data, function(i, size) {
+                                sizeSelect.append($('<option></option>')
+                                    .attr('value', size.id)
+                                    .text(size.name));
+                            });
+                            
+                            // Select the first size option if available
+                            if (data.length > 0) {
+                                sizeSelect.val(data[0].id);
+                                sizeSelect.trigger('change'); // Trigger change to load price if available
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Lỗi khi tải kích cỡ:", error);
+                            sizeSelect.empty();
+                            sizeSelect.append('<option value="">Lỗi tải kích cỡ</option>');
+                        }
+                    });
+                } else {
+                    // If no product selected, clear size select
+                    sizeSelect.empty();
+                    sizeSelect.append('<option value="">Chọn kích cỡ</option>');
+                }
+            });
+            
+            // Handle size selection change
+            $(document).on('change', '.size-select', function() {
+                var row = $(this).closest('tr');
+                var productId = row.find('.product-select').val();
+                var sizeId = $(this).val();
+                var priceInput = row.find('.price-input');
+                
+                if (productId && sizeId) {
+                    var key = productId + '-' + sizeId;
+                    
+                    // If we have a stored price for this product-size combination, use it
+                    if (productSizePrices[key]) {
+                        priceInput.val(productSizePrices[key]);
+                    }
+                }
+                
+                // Recalculate subtotal
+                updateSubtotal(row);
+            });
+            
+            // Store price when it changes
+            $(document).on('change', '.price-input', function() {
+                var row = $(this).closest('tr');
+                var productId = row.find('.product-select').val();
+                var sizeId = row.find('.size-select').val();
+                var price = $(this).val();
+                
+                if (productId && sizeId) {
+                    var key = productId + '-' + sizeId;
+                    productSizePrices[key] = price;
+                }
+            });
+            
+            // Check purchase price against selling price
+            $(document).on('input', '.price-input', function() {
+                var row = $(this).closest('tr');
+                var productId = row.find('.product-select').val();
+                var purchasePrice = parseFloat($(this).val()) || 0;
+                
+                if (productId && productPrices[productId]) {
+                    var sellingPrice = productPrices[productId];
+                    
+                    if (purchasePrice > sellingPrice) {
+                        // Add warning class and tooltip
+                        $(this).addClass('border-danger');
+                        if (!row.find('.price-warning').length) {
+                            row.find('.input-group').after(
+                                '<div class="price-warning text-danger small mt-1">' +
+                                '<i class="fas fa-exclamation-triangle"></i> ' +
+                                'Giá nhập cao hơn giá bán (' + sellingPrice.toLocaleString() + ' VNĐ)' +
+                                '</div>'
+                            );
+                        }
+                    } else {
+                        // Remove warning
+                        $(this).removeClass('border-danger');
+                        row.find('.price-warning').remove();
+                    }
+                }
+                
+                // Store price for this product-size combination
+                var sizeId = row.find('.size-select').val();
+                if (productId && sizeId) {
+                    var key = productId + '-' + sizeId;
+                    productSizePrices[key] = $(this).val();
+                }
+                
+                updateSubtotal(row);
+            });
+            
+            // Calculate subtotal when quantity or price changes
+            $(document).on('input', '.quantity-input, .price-input', function() {
+                var row = $(this).closest('tr');
+                updateSubtotal(row);
+            });
+            
+            // Function to update subtotal for a row
+            function updateSubtotal(row) {
+                var quantity = parseInt(row.find('.quantity-input').val()) || 0;
+                var price = parseFloat(row.find('.price-input').val()) || 0;
+                var subtotal = quantity * price;
+                
+                row.find('.subtotal').text(subtotal.toLocaleString());
+                calculateTotal();
+            }
+            
+            // Add new item row
+            $('#addItemBtn').click(function() {
+                var newRow = $('.item-row:first').clone();
+                newRow.find('select, input').val('');
+                newRow.find('.subtotal').text('0');
+                newRow.find('.price-warning').remove(); // Remove any price warnings
+                
+                // Only populate product dropdown if supplier is selected
+                var supplierId = $('#supplier').val();
+                if (supplierId) {
+                    var productSelect = newRow.find('.product-select');
+                    productSelect.empty();
+                    productSelect.append('<option value="">Chọn sản phẩm</option>');
+                    
+                    // Copy options from the first product dropdown
+                    $('.item-row:first .product-select option').each(function() {
+                        if ($(this).val()) {
+                            productSelect.append($(this).clone());
+                        }
+                    });
+                }
+                
+                $('#itemsTable tbody').append(newRow);
+            });
+            
+            // Remove item row
+            $(document).on('click', '.remove-item', function() {
+                if ($('.item-row').length > 1) {
+                    $(this).closest('tr').remove();
+                    calculateTotal();
+                } else {
+                    alert('Cần ít nhất một sản phẩm.');
+                }
+            });
+            
+            // Calculate total amount
+            function calculateTotal() {
+                var total = 0;
+                $('.subtotal').each(function() {
+                    total += parseInt($(this).text().replace(/,/g, '')) || 0;
+                });
+                $('#totalAmount').text(total.toLocaleString());
+            }
+            
+            // Form validation
+            $('#importOrderForm').submit(function(e) {
+                var valid = true;
+                var warnings = [];
+                
+                // Check if supplier is selected
+                if (!$('#supplier').val()) {
+                    alert('Vui lòng chọn nhà cung cấp.');
+                    valid = false;
+                    return false;
+                }
+                
+                // Check if all items have product, size, quantity and price
+                $('.item-row').each(function() {
+                    var product = $(this).find('.product-select').val();
+                    var size = $(this).find('.size-select').val();
+                    var quantity = $(this).find('.quantity-input').val();
+                    var price = $(this).find('.price-input').val();
+                    
+                    if (!product || !size || !quantity || !price) {
+                        alert('Vui lòng điền đầy đủ thông tin cho mỗi sản phẩm.');
+                        valid = false;
+                        return false;
+                    }
+                    
+                    // Check for price warnings
+                    if ($(this).find('.price-warning').length) {
+                        var productName = $(this).find('.product-select option:selected').text();
+                        warnings.push('Sản phẩm "' + productName + '" có giá nhập cao hơn giá bán.');
+                    }
+                });
+                
+                // Show warnings but allow submission
+                if (valid && warnings.length > 0) {
+                    return confirm('Cảnh báo:\n\n' + warnings.join('\n') + '\n\nBạn có chắc chắn muốn tiếp tục?');
+                }
+                
+                return valid;
+            });
+        });
+    </script>
+</body>
+</html>

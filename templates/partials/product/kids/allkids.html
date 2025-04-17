@@ -1,0 +1,184 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+<form id="csrf-form" class="d-none">
+    {% csrf_token %}
+</form>
+
+<div class="container-fluid" data-aos="fade-in">
+    <!-- Breadcrumb & Title -->
+    <div class="d-flex justify-content-between pt-5 pb-4 flex-column flex-lg-row align-items-start align-items-lg-center gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'core:index' %}">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'products:allkids' %}">Giày trẻ em</a></li>
+                    {% if purpose %}<li class="breadcrumb-item active fw-bold text-primary">{{ purpose.name }}</li>{% endif %}
+                    {% if shoe_type %}<li class="breadcrumb-item active fw-bold text-primary">{{ shoe_type.name }}</li>{% endif %}
+                    {% if material %}<li class="breadcrumb-item active fw-bold text-primary">{{ material.name }}</li>{% endif %}
+                    {% if label %}<li class="breadcrumb-item active fw-bold text-primary">{{ label|title }}</li>{% endif %}
+                </ol>
+            </nav>
+            <h1 class="fw-bold fs-3">
+                {% if purpose %}{{ purpose.name }}{% endif %}
+                {% if shoe_type %} {{ shoe_type.name }}{% endif %}
+                {% if material %} {{ material.name }}{% endif %}
+                {% if label %} {{ label|title }}{% endif %}
+            </h1>
+        </div>
+
+        <!-- Sort & Filter -->
+        <div class="d-flex gap-3 mt-3 mt-lg-0">
+            <form method="GET" class="d-flex align-items-center">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="ri-sort-desc"></i>
+                    </span>
+                    <select class="form-select border-start-0 ps-0" name="sort" onchange="this.form.submit()" style="min-width: 200px;">
+                        <option value="">Sắp xếp theo</option>
+                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Giá tăng dần</option>
+                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Giá giảm dần</option>
+                        <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Tên A-Z</option>
+                        <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Tên Z-A</option>
+                    </select>
+                </div>
+            </form>
+            <button class="btn btn-outline-dark px-3 py-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilters">
+                <i class="ri-filter-3-line me-1"></i> Bộ lọc
+            </button>
+        </div>
+    </div>
+
+    <!-- Product List -->
+    <div class="row g-4 mt-2" id="product-list">
+        {% include 'partials/product/kids/product_items.html' %}
+    </div>
+
+    <div class="d-flex flex-column f-w-44 mx-auto my-5 text-center">
+        <small id="product-count" class="text-muted">Hiển thị {{ products|length }} trong tổng số {{ total_products }} sản phẩm</small>
+        <div class="progress f-h-1 mt-3">
+            <div id="progress-bar" class="progress-bar bg-dark" role="progressbar" style="width: {% widthratio products|length total_products 100 %}%" aria-valuenow="{% widthratio products|length total_products 100 %}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        {% if products|length < total_products %}
+        <button type="button" id="load-more" class="btn btn-outline-dark btn-sm mt-5 align-self-center py-3 px-4 border-2" 
+                data-offset="{{ products|length }}"
+                data-url="{% url 'products:allkids' %}">
+            Xem thêm
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block overlay_content %}
+    {% include 'partials/product/product_filters.html' %}
+{% endblock overlay_content %}
+
+{% block extra_css %}
+<style>
+    .favorite-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important; 
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .favorite-btn i {
+        color: black;
+        font-size: 18px;
+        transition: transform 0.2s ease;
+    }
+
+    .favorite-btn:hover i {
+        transform: scale(1.2);
+    }
+
+    .product-img-wrapper {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-img {
+        transition: transform 0.3s ease;
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+    }
+
+    .product-img:hover {
+        transform: scale(1.05);
+    }
+
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.02);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-img-wrapper:hover .product-overlay {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('click', function (e) {
+        const button = e.target.closest('#load-more');
+        if (button) {
+            const offset = parseInt(button.dataset.offset);
+            const url = new URL(button.dataset.url, window.location.origin);
+            const params = new URLSearchParams(window.location.search);
+            params.set('offset', offset);
+            url.search = params;
+    
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const container = document.querySelector('#product-list');
+                container.insertAdjacentHTML('beforeend', data.html);
+                
+                // Update the displayed count using the data from the server
+                const countDisplay = document.querySelector('#product-count');
+                if (countDisplay) {
+                    // If we've loaded all products, show the total count for both values
+                    if (!data.has_next) {
+                        countDisplay.textContent = `Hiển thị ${data.total_products} trong tổng số ${data.total_products} sản phẩm`;
+                    } else if (data.shown_products) {
+                        countDisplay.textContent = `Hiển thị ${data.shown_products} trong tổng số ${data.total_products} sản phẩm`;
+                    }
+                }
+                
+                // Update progress bar
+                const progressBar = document.querySelector('#progress-bar');
+                if (progressBar) {
+                    const percentage = !data.has_next ? 100 : Math.min((data.shown_products / data.total_products) * 100, 100);
+                    progressBar.style.width = `${percentage}%`;
+                    progressBar.setAttribute('aria-valuenow', percentage);
+                }
+                
+                if (data.has_next) {
+                    button.dataset.offset = data.next_offset;
+                } else {
+                    button.remove();
+                }
+            })
+            .catch(error => console.error('Lỗi khi load thêm sản phẩm:', error));
+        }
+    });
+</script>
+{% endblock %}

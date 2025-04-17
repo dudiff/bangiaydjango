@@ -1,0 +1,119 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-file-invoice"></i> Đơn hàng #{{ order.order_code }}
+        </h2>
+        <a href="{% url 'orders:order_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Trở về danh sách
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-box"></i> Sản phẩm đã đặt</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Size</th>
+                                    <th>Màu sắc</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.order_items.all %}
+                                <tr>
+                                    <td><strong>{{ item.product_name }}</strong></td>
+                                    <td><span class="badge bg-secondary">{{ item.size.name }}</span></td>
+                                    <td><span class="badge bg-info">{{ item.color.name }}</span></td>
+                                    <td class="text-center">{{ item.quantity }}</td>
+                                    <td class="text-end">{{ item.price|floatformat:0 }}₫</td>
+                                    <td class="text-end">{{ item.total_price|floatformat:0 }}₫</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4"></td>
+                                    <td class="text-end"><strong>Phí vận chuyển:</strong></td>
+                                    <td class="text-end">{{ order.shipping_fee|floatformat:0 }}₫</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4"></td>
+                                    <td class="text-end"><strong>Tổng cộng:</strong></td>
+                                    <td class="text-end"><strong class="text-primary fs-5">{{ order.total_amount|floatformat:0 }}₫</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin đơn hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Ngày đặt</small>
+                        <p class="mb-0">{{ order.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Trạng thái đơn hàng</small>
+                        <p class="mb-0">
+                            {% if order.status == 'pending' %}
+                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-info">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'shipping' %}
+                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Phương thức thanh toán</small>
+                        <p class="mb-0">{{ order.get_payment_method_display }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Trạng thái thanh toán</small>
+                        <p class="mb-0">
+                            {% if order.payment_status == 'paid' %}
+                                <span class="badge bg-success">{{ order.get_payment_status_display }}</span>
+                            {% elif order.payment_status == 'pending' %}
+                                <span class="badge bg-warning">{{ order.get_payment_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-danger">{{ order.get_payment_status_display }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-shipping-fast"></i> Thông tin giao hàng</h5>
+                </div>
+                <div class="card-body">
+                    {{ order.shipping_address|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

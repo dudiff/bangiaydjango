@@ -1,0 +1,40 @@
+{% load static %}
+<footer class="border-top py-5 mt-4  ">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-column flex-lg-row">
+            <div class="text-center">
+                <ul class="list-unstyled d-inline-flex gap-3">
+                    <li><a class="text-decoration-none text-dark-hover transition-all"
+                            href=""><i class="ri-instagram-fill"></i></a></li>
+                    <li><a class="text-decoration-none text-dark-hover transition-all"
+                            href=""><i class="ri-facebook-fill"></i></a></li>
+                    <li><a class="text-decoration-none text-dark-hover transition-all" 
+                            href=""><i class="ri-tiktok-fill"></i></a></li>
+                </ul>
+            </div>            
+            <div class="d-flex align-items-center justify-content-end flex-column flex-lg-row">
+                <p class="small m-0 text-center text-lg-start" id="current-year3" >&copy; {{ year }}</p>
+                <p class="small m-0 text-center text-lg-start">&nbsp | DStore Shoes Auth</p>
+                <ul class="list-unstyled mb-0 ms-lg-4 mt-3 mt-lg-0 d-flex justify-content-end align-items-center">
+                    <li class="bg-light p-2 d-flex align-items-center justify-content-center me-2">
+                        <img src="{% static 'assets/images/logos/vnpay.png' %}" alt="VNPAY" style="height: 24px;">
+                    </li>
+                    <li class="bg-light p-2 d-flex align-items-center justify-content-center me-2">
+                        <img src="{% static 'assets/images/logos/momo.png' %}" alt="Momo" style="height: 24px;">
+                    </li>
+                    <li class="bg-light p-2 d-flex align-items-center justify-content-center me-2">
+                        <img src="{% static 'assets/images/logos/mastercard.png' %}" alt="Mastercard" style="height: 24px;">
+                    </li>
+                    <li class="bg-light p-2 d-flex align-items-center justify-content-center">
+                        <img src="{% static 'assets/images/logos/express.png' %}" alt="Vietnam Express" style="height: 24px;">
+                    </li>
+                </ul>                    
+            </div>
+        </div>
+    </div>
+</footer>   
+<!-- Vendor JS -->
+<script src="{{webRoot}}/assets/js/vendor.bundle.js"></script>
+
+<!-- Theme JS -->
+<script src="{{webRoot}}/assets/js/theme.bundle.js"></script>

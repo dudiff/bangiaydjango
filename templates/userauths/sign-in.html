@@ -1,0 +1,40 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+{% load socialaccount %}
+<section class="mt-0 overflow-hidden vh-100 d-flex justify-content-center align-items-center p-4">
+    <div class="col col-md-8 col-lg-6 col-xxl-5">
+
+        <div class="shadow-xl p-4 p-lg-5 bg-white">
+            <h1 class="text-center fw-bold mb-5 fs-2">Đăng nhập</h1>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="id_username">Tên đăng nhập</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_password1">Mật khẩu</label>
+                    {{ form.password }}
+                </div>
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{% url 'userauths:password_reset' %}"  class="text-muted small">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="btn btn-dark d-block w-100 my-4">Đăng nhập</button>
+            </form>
+            <span class="text-muted text-center d-block fw-bolder my-4">HOẶC</span>
+            <a href="{% provider_login_url 'facebook' %}" class="btn btn-facebook d-block mb-2">
+                <i class="ri-facebook-circle-fill align-bottom"></i> Đăng nhập bằng Facebook
+            </a>
+            <a href="{% provider_login_url 'google' %}" class="btn btn-danger d-block mb-2">
+                <i class="ri-google-fill align-bottom"></i> Đăng nhập bằng Google
+            </a>
+ 
+            <p class="d-block text-center text-muted">
+                Chưa có tài khoản? <a class="text-muted" href="{% url 'userauths:sign-up' %}">Đăng ký ngay</a>
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock content %}

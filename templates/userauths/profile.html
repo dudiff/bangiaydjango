@@ -1,0 +1,61 @@
+<!-- filepath: /c:/Users/dinhd/dstore/templates/userauths/profile.html -->
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Thông tin tài khoản</h2>
+    <div class="mb-3">
+        <a href="{% url 'userauths:profile' %}" class="btn btn-link">Tài khoản của tôi</a> |
+        <a href="{% url 'orders:order_list' %}" class="btn btn-link">Đơn hàng</a> |
+        <a href="{% url 'favorites:favorite-list' %}" class="btn btn-link">Yêu thích</a> |
+        <a href="page-account.html" class="btn btn-link">Đánh giá của tôi</a>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Tên đăng nhập:</strong></div>
+                <div class="col-md-9">{{ user.username }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Email:</strong></div>
+                <div class="col-md-9">{{ user.email }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Họ</strong></div>
+                <div class="col-md-9">{{ user.first_name }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Tên</strong></div>
+                <div class="col-md-9">{{ user.last_name }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Số điện thoại:</strong></div>
+                <div class="col-md-9">{{ user.profile.phone|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Địa chỉ chi tiết:</strong></div>
+                <div class="col-md-9">{{ user.profile.address|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Tỉnh/Thành phố:</strong></div>
+                <div class="col-md-9">{{ user.profile.city.name|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Quận/Huyện:</strong></div>
+                <div class="col-md-9">{{ user.profile.district.name|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Phường/Xã:</strong></div>
+                <div class="col-md-9">{{ user.profile.ward.name|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3"><strong>Tiểu sử:</strong></div>
+                <div class="col-md-9">{{ user.bio|default:"Chưa cập nhật" }}</div>
+            </div>
+            <div class="text-center">
+                <a href="{% url 'userauths:edit_profile' %}" class="btn btn-primary">Sửa thông tin</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

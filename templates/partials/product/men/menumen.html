@@ -1,0 +1,135 @@
+{% load static %}
+<li class="nav-item dropdown dropdown position-static">
+    <a class="nav-link dropdown-toggle" href="{% url 'products:allmen' %}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Nam
+    </a>
+    <!-- Menswear dropdown menu-->
+    <div class="dropdown-menu dropdown-megamenu">
+        <div class="container-fluid">
+            <div class="row g-0 g-lg-3">
+                <!-- Menswear Dropdown Menu Links Section-->
+                <div class="col col-lg-8 py-lg-5">
+                    <div class="row py-3 py-lg-0 flex-wrap gx-4 gy-6">
+                        <!-- menu row-->
+                        <div class="col">
+                            <h6 class="dropdown-heading" style="font-size: 1rem;">Mục đích</h6>
+                            <ul class="list-unstyled">
+                                {% for purpose in menu_purposes_men %}
+                                <li class="dropdown-list-item">
+                                    <a class="dropdown-item" href="{% url 'products:allmen' %}?purpose={{ purpose.id }}">
+                                        {{ purpose.name }} 
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% comment %} <li class="dropdown-list-item">
+                                    <a class="dropdown-item dropdown-link-all" href="{% url 'products:allmen' %}">
+                                        Xem tất cả
+                                    </a>
+                                </li> {% endcomment %}
+                            </ul>
+                        </div>
+                        <!-- / menu row-->
+                    
+                        <!-- menu row-->
+                        <div class="col">
+                            <h6 class="dropdown-heading" style="font-size: 1rem;">Kiểu dáng</h6> <!-- sandal-->
+                            <ul class="list-unstyled">
+                                {% for shoe_type in shoe_types %}
+                                <li class="dropdown-list-item">
+                                    <a class="dropdown-item" href="{% url 'products:allmen' %}?shoe_type={{ shoe_type.id }}">
+                                        {{ shoe_type.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% comment %} <li class="dropdown-list-item"><a class="dropdown-item dropdown-link-all" href="{% url 'products:allmen' %}">Xem tất cả</a></li> {% endcomment %}
+                            </ul>
+                        </div>
+                        <!-- / menu row-->
+                    
+                        <!-- menu row-->
+                        <div class="d-none d-xxl-block col">
+                            <h6 class="dropdown-heading" style="font-size: 1rem;">Chất liệu</h6>
+                            <ul class="list-unstyled">
+                                {% for material in materials %}
+                                <li class="dropdown-list-item">
+                                    <a class="dropdown-item" href="{% url 'products:allmen' %}?material={{ material.id }}">
+                                        {{ material.name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% comment %} <li class="dropdown-list-item"><a class="dropdown-item dropdown-link-all" href="{% url 'products:allmen' %}">Xem tất cả</a></li> {% endcomment %}
+                            </ul>
+                        </div>
+                        <!-- / menu row-->  
+                        
+                        <!-- menu row-->
+                        <div class="col">
+                            <h6 class="dropdown-heading text-danger" style="font-size: 1rem;">Giá tốt</h6>
+                            <ul class="list-unstyled">
+                                {% for label_value, label_name in labels %}
+                                <li class="dropdown-list-item">
+                                    <a class="dropdown-item text-danger" href="{% url 'products:allmen' %}?label={{ label_value }}">
+                                        {{ label_name }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% comment %} <li class="dropdown-list-item"><a class="dropdown-item dropdown-link-all" href="{% url 'products:allmen' %}">Xem tất cả</a></li> {% endcomment %}
+                            </ul>
+                        </div>
+                        <!-- / menu row-->      
+                    </div>
+                    <div class="text-center mt-4 col-12">
+                        <a class="dropdown-item dropdown-link-all fw-bold border-top pt-3" href="{% url 'products:allmen' %}">Xem tất cả sản phẩm Nam</a>
+                    </div>        
+                </div>
+                
+                <div class="col-lg-4 d-none d-lg-block">
+                    <div class="vw-50 border-start h-100 position-absolute"></div>
+                    <div class="py-lg-5 position-relative z-index-10 px-lg-4">
+                        <h6 class="dropdown-heading mb-4" style="font-size: 1rem;">Thương hiệu nổi bật</h6>
+                        <div class="row g-3">
+                            {% for brand in menu_brands_men|slice:":4" %}
+                            <div class="col-6">
+                                <div class="brand-box">
+                                    <a href="{% url 'products:all_products' %}?brand={{ brand.id }}" class="text-decoration-none">
+                                        {% if brand.logo %}
+                                            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" title="{{ brand.name }}">
+                                        {% else %}
+                                            <img src="{% static 'assets/images/placeholder.jpg' %}" alt="{{ brand.name }}" title="{{ brand.name }}">
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="{% url 'products:all_products' %}" class="btn btn-link p-0 fw-bolder text-link-border mt-4 text-dark mx-auto d-table" style="text-decoration: none; font-weight: bold; font-size: 1.2rem;">Đi đến tất cả thương hiệu</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- / Menswear dropdown menu-->
+</li>
+<style>
+    .brand-box {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .brand-box:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .brand-box img {
+        max-width: 100%;
+        max-height: 90px;
+        object-fit: contain;
+    }
+</style>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý nhập hàng | D-Store</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .btn-info {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            color: white;
+        }
+        
+        .table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        .dashboard-stats {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .stats-orders {
+            background-color: #3498db;
+        }
+        
+        .stats-value {
+            background-color: #2ecc71;
+        }
+        
+        .stats-suppliers {
+            background-color: #e74c3c;
+        }
+        
+        .stats-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .print-section {
+            display: none;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .print-section {
+                display: block;
+            }
+        }
+    </style>
+    {% load static %}
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-truck-loading"></i> Quản lý nhập hàng</h2>
+            </div>
+            <a href="{% url 'imports:import_order_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Tạo đơn nhập hàng
+            </a>
+        </div>
+        
+        <!-- Dashboard Stats -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="dashboard-stats stats-orders">
+                    <i class="fas fa-file-invoice fa-2x"></i>
+                    <div class="stats-number">{{ total_orders_count }}</div>
+                    <div>Tổng đơn nhập hàng</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-stats stats-value">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                    <div class="stats-number">
+                        {{ total_amount|floatformat:0 }}
+                    </div>
+                    <div>Tổng giá trị (VNĐ)</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-stats stats-suppliers">
+                    <i class="fas fa-building fa-2x"></i>
+                    <div class="stats-number">
+                        {{ suppliers.count }}
+                    </div>
+                    <div>Nhà cung cấp</div>
+                </div>
+            </div>
+        </div>
+        
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Filters -->
+        <div class="card mb-4 no-print">
+            <div class="card-header">
+                <h5><i class="fas fa-filter"></i> Bộ lọc</h5>
+            </div>
+            <div class="card-body">
+                <form class="row g-3" method="get" action="{% url 'imports:import_order_list' %}">
+                    <div class="col-md-3">
+                        <label for="supplier-filter" class="form-label">Nhà cung cấp</label>
+                        <select id="supplier-filter" name="supplier" class="form-select">
+                            <option value="">Tất cả</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}" {% if request.GET.supplier == supplier.id|stringformat:"i" %}selected{% endif %}>
+                                {{ supplier.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date-from" class="form-label">Từ ngày</label>
+                        <input type="date" class="form-control" id="date-from" name="date_from" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date-to" class="form-label">Đến ngày</label>
+                        <input type="date" class="form-control" id="date-to" name="date_to" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Print Section Header -->
+        <div class="print-section mb-4">
+            <div class="text-center">
+                <h3>D-STORE</h3>
+                <p>Thư Phú - Thường Tín - Hà Nội</p>
+                <h4>DANH SÁCH ĐƠN NHẬP HÀNG</h4>
+                <p>Ngày in: {% now "d/m/Y H:i" %}</p>
+            </div>
+        </div>
+        
+        <!-- Orders Table -->
+        <div class="card">
+            <!-- In the card-header section where the export Excel button is -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-list"></i> Danh sách đơn nhập hàng</h5>
+                <div class="btn-group no-print">
+                    <a href="{% url 'imports:export_excel' %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-file-excel"></i> Xuất Excel
+                    </a>
+                    <a href="{% url 'imports:print_order_list' %}" class="btn btn-sm btn-info" target="_blank">
+                        <i class="fas fa-print"></i> In danh sách
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Số thứ tự</th>
+                                <th>Nhà cung cấp</th>
+                                <th>Người tạo</th>
+                                <th>Ngày tạo</th>
+                                <th>Tổng tiền (VNĐ)</th>
+                                <th class="no-print">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in import_orders %}
+                            <tr>
+                                <td><strong>{{ forloop.counter }}</strong></td>
+                                <td>
+                                    <i class="fas fa-building text-secondary me-1"></i>
+                                    {{ order.supplier.name }}
+                                </td>
+                                <td>
+                                    <i class="fas fa-user text-secondary me-1"></i>
+                                    {{ order.created_by.username }}
+                                </td>
+                                <td>
+                                    <i class="fas fa-calendar-alt text-secondary me-1"></i>
+                                    {{ order.created_at|date:"d/m/Y H:i" }}
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {{ order.total_amount|floatformat:0 }}
+                                </td>
+                                <td class="no-print">
+                                    <div class="btn-group">
+                                        <a href="{% url 'imports:import_order_detail' order.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> Xem
+                                        </a>
+                                        <a href="{% url 'imports:print_order' order.id %}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x mb-3 text-secondary"></i>
+                                    <p>Không tìm thấy đơn nhập hàng nào.</p>
+                                    <a href="{% url 'imports:import_order_create' %}" class="btn btn-primary no-print">
+                                        <i class="fas fa-plus"></i> Tạo đơn nhập hàng
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-4 no-print">
+                    <ul class="pagination justify-content-center">
+                        {% if import_orders.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if request.GET.supplier %}&supplier={{ request.GET.supplier }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" tabindex="-1">Đầu</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ import_orders.previous_page_number }}{% if request.GET.supplier %}&supplier={{ request.GET.supplier }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Trước</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Đầu</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Trước</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for i in import_orders.paginator.page_range %}
+                            {% if import_orders.number == i %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                            {% elif i > import_orders.number|add:'-3' and i < import_orders.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ i }}{% if request.GET.supplier %}&supplier={{ request.GET.supplier }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if import_orders.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ import_orders.next_page_number }}{% if request.GET.supplier %}&supplier={{ request.GET.supplier }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Sau</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ import_orders.paginator.num_pages }}{% if request.GET.supplier %}&supplier={{ request.GET.supplier }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">Cuối</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Sau</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Cuối</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

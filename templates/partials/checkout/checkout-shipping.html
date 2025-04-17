@@ -1,0 +1,151 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+<section class="mt-0 overflow-lg-hidden vh-lg-100">
+    <div class="container">
+        <div class="row g-0 vh-lg-100">
+            <div class="col-12 col-lg-7 pt-5 pt-lg-10">
+                <div class="pe-lg-5">
+                    <!-- Navigation -->
+                    <nav class="d-none d-md-block">
+                        <ul class="list-unstyled d-flex justify-content-start mt-4 align-items-center fw-bolder small">
+                            <li class="me-4"><a class="nav-link-checkout" href="{% url 'cart:cart' %}">Giỏ hàng</a></li>
+                            <li class="me-4"><a class="nav-link-checkout" href="{% url 'checkout:information' %}">Nhập thông tin</a></li>
+                            <li class="me-4"><a class="nav-link-checkout active" href="{% url 'checkout:shipping' %}">Vận chuyển</a></li>
+                            <li><a class="nav-link-checkout nav-link-last" href="{% url 'checkout:payment' %}">Thanh toán</a></li>
+                        </ul>
+                    </nav>
+
+                    <!-- Shipping Options -->
+                    <div class="mt-5">
+                        <h3 class="fs-5 fw-bolder mb-4 border-bottom pb-4">Phương thức vận chuyển</h3>
+                        <form method="post" action="{% url 'checkout:process_shipping' %}" id="shippingForm">
+                            {% csrf_token %}
+                            <input type="hidden" id="baseShippingFee" value="{{ base_shipping_fee }}">
+                            
+                            <!-- Standard Shipping Option-->
+                            <div class="form-check form-group form-check-custom form-radio-custom form-radio-highlight mb-3">
+                                <input class="form-check-input shipping-method" type="radio" name="shipping_method" 
+                                       id="standardShipping" value="standard" checked>
+                                <label class="form-check-label" for="standardShipping">
+                                    <span class="d-flex justify-content-between align-items-start">
+                                        <span>
+                                            <span class="mb-0 fw-bolder d-block">Giao hàng tiêu chuẩn</span>
+                                            <small class="fw-bolder">Thời gian giao hàng 3-5 ngày</small>
+                                        </span>
+                                        <span class="small fw-bolder text-uppercase shipping-cost">{{ base_shipping_fee|floatformat:0 }}VNĐ</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Express Shipping Option-->
+                            <div class="form-check form-group form-check-custom form-radio-custom form-radio-highlight mb-3">
+                                <input class="form-check-input shipping-method" type="radio" name="shipping_method" 
+                                       id="expressShipping" value="express">
+                                <label class="form-check-label" for="expressShipping">
+                                    <span class="d-flex justify-content-between align-items-start">
+                                        <span>
+                                            <span class="mb-0 fw-bolder d-block">Giao hàng hỏa tốc</span>
+                                            <small class="fw-bolder">Thời gian giao hàng 1-2 ngày</small>
+                                        </span>
+                                        <span class="small fw-bolder text-uppercase shipping-cost">{{ express_shipping_fee|floatformat:0 }}VNĐ</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="pt-5 mt-5 pb-5 border-top d-flex flex-column flex-md-row justify-content-between align-items-center">
+                                <a href="{% url 'checkout:information' %}" class="btn ps-md-0 btn-link fw-bolder w-100 w-md-auto mb-2 mb-md-0">Quay lại thông tin</a>
+                                <button type="submit" class="btn btn-dark w-100 w-md-auto">Tiếp tục thanh toán</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-12 col-lg-5 bg-light pt-lg-10 aside-checkout pb-5 pb-lg-0 my-5 my-lg-0">
+                <div class="p-4 py-lg-0 pe-lg-0 ps-lg-5">
+                    <div class="pb-3">
+                        {% for item in cart.items.all %}
+                        <div class="row mx-0 py-4 g-0 border-bottom">
+                            <div class="col-2 position-relative">
+                                <span class="checkout-item-qty">{{ item.quantity }}</span>
+                                <picture class="d-block border">
+                                    <img class="img-fluid" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                </picture>
+                            </div>
+                            <div class="col-9 offset-1">
+                                <div>
+                                    <h6 class="justify-content-between d-flex align-items-start mb-2">{{ item.product.name }}</h6>
+                                    <span class="d-block text-muted fw-bolder text-uppercase fs-9">
+                                        Size: {{ item.size.name }} / Màu: {{ item.color.name }} / SL: {{ item.quantity }}
+                                    </span>
+                                </div>
+                                <p class="fw-bolder text-end text-muted m-0">{{ item.product.price|floatformat:0 }}VNĐ</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="py-4 border-bottom">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                          <p class="m-0 fw-bolder fs-6">Tạm tính</p>
+                          <p class="m-0 fs-6 fw-bolder">{{ cart.get_total|floatformat:0 }}VNĐ</p>
+                      </div>
+                      {% if cart.promotion %}
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                          <p class="m-0 fw-bolder fs-6">Giảm giá</p>
+                          <p class="m-0 fs-6 fw-bolder text-success">-{{ cart.discount|floatformat:0 }}VNĐ</p>
+                      </div>
+                      {% endif %}
+                      <div class="d-flex justify-content-between align-items-center">
+                          <p class="m-0 fw-bolder fs-6">Phí vận chuyển</p>
+                          <p class="m-0 fs-6 fw-bolder" id="selectedShippingFee">{{ base_shipping_fee|floatformat:0 }}VNĐ</p>
+                      </div>
+                  </div>
+                  <div class="py-4">
+                      <div class="d-flex justify-content-between">
+                          <div>
+                              <p class="m-0 fw-bold fs-5">Tổng tiền</p>
+                              {% if cart.promotion %}
+                              <small class="text-success">Đã áp dụng mã giảm giá</small>
+                              {% endif %}
+                          </div>
+                          <p class="m-0 fs-5 fw-bold" id="totalAmount">{{ cart.get_final_total|floatformat:0 }}VNĐ</p>
+                      </div>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const baseShippingFee = parseFloat(document.getElementById('baseShippingFee').value);
+    const shippingMethods = document.querySelectorAll('.shipping-method');
+    const selectedShippingFee = document.getElementById('selectedShippingFee');
+    const totalAmount = document.getElementById('totalAmount');
+    const cartTotal = {{ cart.get_total }};
+    const cartDiscount = {{ cart.discount|default:0 }};
+
+    function updateTotals(shippingFee) {
+        selectedShippingFee.textContent = shippingFee.toLocaleString() + 'VNĐ';
+        const cartTotalWithDiscount = cartTotal - cartDiscount;
+        const finalTotal = cartTotalWithDiscount + shippingFee;
+        totalAmount.textContent = finalTotal.toLocaleString() + 'VNĐ';
+    }
+
+    // Initialize total on page load
+    updateTotals(baseShippingFee);
+
+    shippingMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            const shippingFee = this.value === 'express' ? baseShippingFee + 50000 : baseShippingFee;
+            updateTotals(shippingFee);
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock content %}

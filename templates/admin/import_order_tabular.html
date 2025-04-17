@@ -1,0 +1,41 @@
+{% load static %}
+<div class="js-inline-admin-formset inline-group" id="{{ inline_admin_formset.formset.prefix }}-group">
+  {{ inline_admin_formset.formset.management_form }}
+  <div class="tabular inline-related">
+    <fieldset class="module">
+      {% for inline_admin_form in inline_admin_formset %}
+      <div class="form-row {% if inline_admin_form.original or inline_admin_form.show_url %}has_original{% endif %}">
+        <div class="field-box">
+          {{ inline_admin_form.form.product.label_tag }}
+          {{ inline_admin_form.form.product }}
+        </div>
+        <div class="field-box">
+          <label>Giá nhập chung:</label>
+          <input type="number" class="purchase-price-input" name="{{ inline_admin_form.form.purchase_price.html_name }}" value="0" min="0">
+        </div>
+        <div class="size-details">
+          <table class="size-table" style="width: 100%; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; padding: 8px;">Size</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Số lượng</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endfor %}
+    </fieldset>
+  </div>
+</div>
+
+<!-- Add this at the end of your template -->
+<script>
+    window.addEventListener('load', function() {
+        console.log('Template loaded');
+        console.log('Found product selects:', django.jQuery('select[id*="importorderitem_set-"][id*="-product"]').length);
+    });
+</script>
+<script type="text/javascript" src="{% static 'admin/js/import_order.js' %}"></script>

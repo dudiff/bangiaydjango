@@ -1,0 +1,133 @@
+{% load static %}
+<li class="nav-item dropdown dropdown position-static">
+    <a class="nav-link dropdown-toggle" href="{% url 'products:allkids' %}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      Trẻ em
+    </a>
+    <div class="dropdown-menu dropdown-megamenu">
+        <div class="container-fluid">
+            <div class="row g-0 g-lg-3">
+                <!-- Featured Brands Section - Moved to top -->
+                <div class="col-12 mb-4">
+                    <h5 class="dropdown-heading text-center mb-4" style="font-size: 1rem;">Thương hiệu dành cho trẻ</h5>
+                    <div class="row justify-content-center g-4">
+                        {% for brand in menu_brands_kids|slice:":6" %}
+                        <div class="col-4 col-lg-2">
+                            <div class="brand-box">
+                                <a href="{% url 'products:all_products' %}?brand={{ brand.id }}" class="text-decoration-none">
+                                    {% if brand.logo %}
+                                        <img src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                                    {% else %}
+                                        <img src="{% static 'assets/images/placeholder.jpg' %}" alt="{{ brand.name }}">
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="text-center mt-4 col-12">
+                    <a class="dropdown-item dropdown-link-all fw-bold border-top pt-3" href="{% url 'products:allkids' %}">Xem tất cả sản phẩm trẻ em</a>
+                </div>
+                <!-- Categories Grid -->
+                <div class="col-12">
+                    <div class="row g-4">
+                        <!-- Purpose Section -->
+                        <div class="col-lg-3">
+                            <div class="card h-100 border-0 bg-light p-4">
+                                <h6 class="dropdown-heading mb-3 text-center" style="font-size: 1rem;">Mục đích sử dụng</h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for purpose in menu_purposes_kids %}
+                                    <li class="mb-2">
+                                        <a class="dropdown-item rounded-pill bg-white shadow-sm mb-1 text-center d-flex align-items-center justify-content-center" 
+                                           href="{% url 'products:allkids' %}?purpose={{ purpose.id }}"
+                                           style="height: 40px;">
+                                            {{ purpose.name }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Shoe Types Section -->
+                        <div class="col-lg-3">
+                            <div class="card h-100 border-0 bg-light p-4">
+                                <h6 class="dropdown-heading mb-3 text-center" style="font-size: 1rem;">Kiểu dáng</h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for shoe_type in shoe_types|slice:":5" %}
+                                    <li class="mb-2">
+                                        <a class="dropdown-item rounded-pill bg-white shadow-sm mb-1 text-center d-flex align-items-center justify-content-center" 
+                                           href="{% url 'products:allkids' %}?shoe_type={{ shoe_type.id }}"
+                                           style="height: 40px;">
+                                            {{ shoe_type.name }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Materials Section -->
+                        <div class="col-lg-3">
+                            <div class="card h-100 border-0 bg-light p-4">
+                                <h6 class="dropdown-heading mb-3 text-center" style="font-size: 1rem;">Chất liệu</h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for material in materials|slice:":5" %}
+                                    <li class="mb-2">
+                                        <a class="dropdown-item rounded-pill bg-white shadow-sm mb-1 text-center d-flex align-items-center justify-content-center" 
+                                           href="{% url 'products:allkids' %}?material={{ material.id }}"
+                                           style="height: 40px;">
+                                            {{ material.name }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Special Offers Section -->
+                        <div class="col-lg-3">
+                            <div class="card h-100 border-0 bg-light p-4">
+                                <h6 class="dropdown-heading text-danger mb-3 text-center" style="font-size: 1rem;">Ưu đãi đặc biệt</h6>
+                                <ul class="list-unstyled mb-0">
+                                    {% for label_value, label_name in labels %}
+                                    <li class="mb-2">
+                                        <a class="dropdown-item rounded-pill bg-white shadow-sm mb-1 text-center d-flex align-items-center justify-content-center text-danger" 
+                                           href="{% url 'products:allkids' %}?label={{ label_value }}"
+                                           style="height: 40px;">
+                                            {{ label_name }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</li>
+<style>
+    .brand-box {
+        background: white;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .brand-box:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .brand-box img {
+        max-width: 100%;
+        max-height: 70px;
+        object-fit: contain;
+    }
+</style>

@@ -1,0 +1,153 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Chỉnh sửa thông tin tài khoản</h2>
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" id="profileForm">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Tên</label>
+                        <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Họ</label>
+                        <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" name="phone" value="{{ user.profile.phone }}">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" name="address" value="{{ user.profile.address }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tỉnh/Thành phố</label>
+                        <select class="form-select" name="city" id="city">
+                            <option value="">Chọn Tỉnh/Thành phố</option>
+                            {% for city in cities %}
+                                <option value="{{ city.id }}" {% if user.profile.city_id == city.id %}selected{% endif %}>
+                                    {{ city.name_with_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Quận/Huyện</label>
+                        <select class="form-select" name="district" id="district">
+                            <option value="">Chọn Quận/Huyện</option>
+                            {% for district in districts %}
+                                <option value="{{ district.id }}" {% if user.profile.district_id == district.id %}selected{% endif %}>
+                                    {{ district.name_with_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Phường/Xã</label>
+                        <select class="form-select" name="ward" id="ward">
+                            <option value="">Chọn Phường/Xã</option>
+                            {% for ward in wards %}
+                                <option value="{{ ward.id }}" {% if user.profile.ward_id == ward.id %}selected{% endif %}>
+                                    {{ ward.name_with_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Tiểu sử</label>
+                        <textarea class="form-control" name="bio" rows="3">{{ user.bio }}</textarea>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    <a href="{% url 'userauths:profile' %}" class="btn btn-secondary ms-2">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const citySelect = document.getElementById('city');
+        const districtSelect = document.getElementById('district');
+        const wardSelect = document.getElementById('ward');
+
+        // Store initial values
+        const initialCityId = citySelect.value;
+        const initialDistrictId = districtSelect.value;
+        const initialWardId = wardSelect.value;
+
+        function loadDistricts(cityId, keepSelected = false) {
+            if (!cityId) return;
+
+            fetch(`/shipping/api/districts/${cityId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const currentDistrictId = keepSelected ? districtSelect.value : null;
+                    districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                    data.forEach(district => {
+                        const option = new Option(district.name_with_type, district.id);
+                        if (currentDistrictId && district.id === parseInt(currentDistrictId)) {
+                            option.selected = true;
+                        }
+                        districtSelect.add(option);
+                    });
+                    
+                    // If keeping selection, also maintain wards
+                    if (keepSelected && currentDistrictId) {
+                        loadWards(currentDistrictId, true);
+                    }
+                });
+        }
+
+        function loadWards(districtId, keepSelected = false) {
+            if (!districtId) return;
+
+            fetch(`/shipping/api/wards/${districtId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const currentWardId = keepSelected ? wardSelect.value : null;
+                    wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+                    data.forEach(ward => {
+                        const option = new Option(ward.name_with_type, ward.id);
+                        if (currentWardId && ward.id === parseInt(currentWardId)) {
+                            option.selected = true;
+                        }
+                        wardSelect.add(option);
+                    });
+                });
+        }
+
+        // Event listeners
+        citySelect.addEventListener('change', function() {
+            if (this.value) {
+                loadDistricts(this.value);
+            } else {
+                districtSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            }
+        });
+
+        districtSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadWards(this.value);
+            } else {
+                wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+            }
+        });
+
+        // Load initial data with selection preservation
+        if (initialCityId) {
+            loadDistricts(initialCityId, true);
+        }
+    });
+</script>
+{% endblock %}

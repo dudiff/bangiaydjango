@@ -1,0 +1,61 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="mt-4 mb-5">
+    <div class="container">
+        <h1 class="text-center mb-4">Thông tin về DStore</h1>
+        <div class="row">
+            <div class="col-12">
+                <div class="accordion" id="aboutAccordion">
+                    {% for about in abouts %}
+                    <div class="accordion-item border-0 mb-3">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#about-{{ about.id }}" aria-expanded="false">
+                                {{ about.title }}
+                            </button>
+                        </h2>
+                        <div id="about-{{ about.id }}" class="accordion-collapse collapse" data-bs-parent="#aboutAccordion">
+                            <div class="accordion-body">
+                                {% if about.image %}
+                                <div class="text-center mb-4">
+                                    <img src="{{ about.image.url }}" alt="{{ about.title }}" class="img-fluid rounded">
+                                </div>
+                                {% endif %}
+                                <div class="content">
+                                    {{ about.content|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% if abouts.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if abouts.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ abouts.previous_page_number }}">&laquo;</a>
+                </li>
+                {% endif %}
+
+                {% for i in abouts.paginator.page_range %}
+                <li class="page-item {% if abouts.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+
+                {% if abouts.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ abouts.next_page_number }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,294 @@
+{% extends 'partials/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    {% csrf_token %}
+    <h2 class="mb-4">Đơn hàng của tôi</h2>
+    <div class="mb-3">
+        <a href="{% url 'userauths:profile' %}" class="btn btn-link">Tài khoản của tôi</a> |
+        <a href="{% url 'orders:order_list' %}" class="btn btn-link">Đơn hàng</a> |
+        <a href="{% url 'favorites:favorite-list' %}" class="btn btn-link">Yêu thích</a> |
+        <a href="page-account.html" class="btn btn-link">Đánh giá của tôi</a>
+    </div>
+    {% if orders %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Mã đơn hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thanh toán</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{ order.order_code }}</td>
+                        <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>{{ order.total_amount|add:order.shipping_fee|floatformat:0 }}VNĐ</td>
+                        <td>
+                            {% if order.status == 'cancelled' %}
+                                <span class="text-danger">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'delivered' %}
+                                <span class="text-success">{{ order.get_status_display }}</span>
+                            {% else %}
+                                {{ order.get_status_display }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if order.status == 'cancelled' %}
+                                {% if order.payment_method == 'cod' %}
+                                    <span class="text-danger">Đơn hàng đã bị huỷ</span>
+                                {% else %}
+                                    <span class="text-danger">{{ order.get_payment_status_display }}</span>
+                                {% endif %}
+                            {% elif order.payment_status == 'paid' %}
+                                <span class="text-success">{{ order.get_payment_status_display }}</span>
+                            {% else %}
+                                {{ order.get_payment_status_display }}
+                            {% endif %}
+                        </td>
+                        <!-- Add this CSS in the head section -->
+                        <style>
+                        .order-items-tooltip {
+                            display: none;
+                            position: absolute;
+                            background: white;
+                            border: 1px solid #ddd;
+                            padding: 10px;
+                            border-radius: 5px;
+                            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                            z-index: 1000;
+                        }
+                        </style>
+                        
+                        <!-- In the table row -->
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'orders:order_detail' order_id=order.id %}" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                {% if order.status == 'pending' or order.status == 'processing' %}
+                                    <button class="btn btn-sm btn-outline-danger cancel-order" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#cancelOrderModal"
+                                            data-order-id="{{ order.id }}">
+                                        Huỷ đơn
+                                    </button>
+                                {% endif %}
+                                {% if order.status == 'shipping' %}
+                                    <button class="btn btn-sm btn-outline-success confirm-delivery" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#confirmDeliveryModal"
+                                            data-order-id="{{ order.id }}">
+                                        Đã nhận hàng
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                        
+                        <!-- Add this JavaScript at the bottom -->
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                                return new bootstrap.Tooltip(tooltipTriggerEl)
+                            })
+                        });
+                        </script>
+                        
+                        <!-- Update the modal content -->
+                        {% comment %} <div class="modal-body">
+                            <p>Bạn xác nhận đã nhận được hàng?</p>
+                            {% if order.payment_method == 'cod' %}
+                            <p>Lưu ý: Xác nhận này đồng thời xác nhận bạn đã thanh toán cho đơn hàng.</p>
+                            {% endif %}
+                        </div> {% endcomment %}
+                        
+                        <!-- Update the JavaScript -->
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            let currentOrderId = null;
+                            
+                            document.querySelectorAll('.confirm-delivery').forEach(button => {
+                                button.addEventListener('click', function() {
+                                    currentOrderId = this.dataset.orderId;
+                                });
+                            });
+                            
+                            document.getElementById('confirmDeliveryBtn').addEventListener('click', function() {
+                                if (currentOrderId) {
+                                    fetch(`/orders/${currentOrderId}/confirm-delivery/`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': getCookie('csrftoken'),
+                                            'Content-Type': 'application/json'
+                                        }
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            alert(data.message);  // Show success message
+                                            location.reload();
+                                        } else {
+                                            alert(data.message);  // Show error message
+                                        }
+                                    });
+                                }
+                            });
+                            
+                            // Helper function to get CSRF token
+                            function getCookie(name) {
+                                let cookieValue = null;
+                                if (document.cookie && document.cookie !== '') {
+                                    const cookies = document.cookie.split(';');
+                                    for (let i = 0; i < cookies.length; i++) {
+                                        const cookie = cookies[i].trim();
+                                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                            break;
+                                        }
+                                    }
+                                }
+                                return cookieValue;
+                            }
+                        });
+                        </script>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal xác nhận -->
+        <div class="modal fade" id="confirmDeliveryModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xác nhận đã nhận hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn xác nhận đã nhận được hàng?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="confirmDeliveryBtn">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal huỷ đơn hàng -->
+        <div class="modal fade" id="cancelOrderModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Huỷ đơn hàng</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn huỷ đơn hàng này?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
+                        <button type="button" class="btn btn-danger" id="confirmCancelBtn">Huỷ đơn hàng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Bạn chưa có đơn hàng nào.
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentOrderId = null;
+    document.querySelectorAll('.cancel-order').forEach(button => {
+        button.addEventListener('click', function() {
+            currentOrderId = this.dataset.orderId;
+        });
+    });
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Update button click handlers
+    document.querySelectorAll('.confirm-delivery').forEach(button => {
+        button.addEventListener('click', function() {
+            currentOrderId = this.dataset.orderId;
+        });
+    });
+    
+    document.getElementById('confirmDeliveryBtn').addEventListener('click', function() {
+        if (currentOrderId) {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/orders/${currentOrderId}/confirm-delivery/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi xác nhận đơn hàng');
+            });
+        }
+    });
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+        if (currentOrderId) {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/orders/${currentOrderId}/cancel/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi huỷ đơn hàng');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

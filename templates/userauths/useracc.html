@@ -1,0 +1,16 @@
+<li class="ms-1 d-none d-lg-inline-block position-relative dropdown custom-dropdown">
+    <a class="nav-link text-body dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Tài khoản
+    </a>
+    <ul class="dropdown-menu custom-dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'userauths:profile' %}"><i class="fi fi-rs-user mr-10"></i>Tài Khoản của tôi</a></li>
+        <li><a class="dropdown-item" href="{% url 'orders:order_list' %}"><i class="fi fi-rs-location-alt mr-10"></i>Đơn hàng</a></li>
+        <li><a class="dropdown-item" href="{% url 'favorites:favorite-list' %}"><i class="fi fi-rs-heart mr-10"></i>Yêu thích</a></li>
+        <li><a class="dropdown-item" href="page-account.html"><i class="fi fi-rs-settings mr-10"></i>Đánh giá của tôi</a></li>
+        {% if request.user.is_authenticated %}
+            <li><a class="dropdown-item" href="{% url 'userauths:sign-out' %}"><i class="fi fi-rs-sign-out mr-10"></i>Đăng xuất</a></li>
+        {% else %}
+            <li><a class="dropdown-item" href="{% url 'userauths:sign-in' %}"><i class="fi fi-rs-sign-in mr-10"></i>Đăng nhập</a></li>
+        {% endif %}
+    </ul>
+</li>

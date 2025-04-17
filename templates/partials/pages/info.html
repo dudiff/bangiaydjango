@@ -1,0 +1,37 @@
+{% load static %}
+<li class="nav-item dropdown position-static">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Khác
+    </a>
+    <!-- Menswear dropdown menu -->
+    <div class="dropdown-menu dropdown-megamenu w-100">
+        <div class="container">
+            <div class="row g-0 g-lg-3">
+                <div class="col-12">
+                    <div class="py-lg-5 position-relative z-index-10 px-lg-4">
+                        <div class="d-flex flex-row flex-wrap justify-content-between">
+                            <div class="card bg-transparent mx-2">
+                                <picture class="w-100 d-block mb-2 mx-auto">
+                                    <img class="w-100 rounded" src="{% static 'assets/images/banners/2.png' %}" style="max-width: 350px; height: auto;">
+                                </picture>
+                                <a class="fw-bolder link-cover text-center d-block" href="{% url 'pages:about' %}" style="text-decoration: none; font-weight: bold; font-size: 1.2rem;">Về chúng tôi</a>
+                            </div>
+                            <div class="card bg-transparent mx-2">
+                                <picture class="w-100 d-block mb-2 mx-auto">
+                                    <img class="w-100 rounded" src="{% static 'assets/images/banners/1.png' %}" style="max-width: 350px; height: auto;">
+                                </picture>
+                                <a class="fw-bolder link-cover text-center d-block" href="{% url 'pages:contact' %}" style="text-decoration: none; font-weight: bold; font-size: 1.2rem;">Liên hệ cho chúng tôi</a>
+                            </div>
+                            <div class="card bg-transparent mx-2">
+                                <picture class="w-100 d-block mb-2 mx-auto">
+                                    <img class="w-100 rounded" src="{% static 'assets/images/banners/3.png' %}" style="max-width: 350px; height: auto;">
+                                </picture>
+                                <a class="fw-bolder link-cover text-center d-block" href="{% url 'pages:shoe_guide' %}" style="text-decoration: none; font-weight: bold; font-size: 1.2rem;">Cách chọn giày</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+</li>

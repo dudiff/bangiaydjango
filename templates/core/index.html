@@ -1,0 +1,364 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block content %}
+    <!-- Main Section-->
+    <section class="mt-0 overflow-hidden ">
+        <!-- Page Content Goes Here -->
+
+        <!-- / Top banner -->
+        <section class="vh-75 vh-lg-60 container-fluid rounded overflow-hidden" data-aos="fade-in">
+            <!-- Swiper Info -->
+            <div class="swiper-container overflow-hidden rounded h-100 bg-light" data-swiper data-options='{
+              "spaceBetween": 0,
+              "slidesPerView": 1,
+              "effect": "fade",
+              "speed": 1000,
+              "loop": true,
+              "parallax": true,
+              "observer": true,
+              "observeParents": true,
+              "lazy": {
+                "loadPrevNext": true
+                },
+                "autoplay": {
+                  "delay": 5000,
+                  "disableOnInteraction": false
+              },
+              "pagination": {
+                "el": ".swiper-pagination",
+                "clickable": true
+                }
+              }'>
+              <div class="swiper-wrapper">
+                {% for slide in home_slides %}
+                <div class="swiper-slide position-relative h-100 w-100">
+                    <div class="w-100 h-100 overflow-hidden position-absolute z-index-1 top-0 start-0 end-0 bottom-0">
+                        <div class="w-100 h-100 bg-img-cover bg-pos-center-center overflow-hidden" data-swiper-parallax="-100"
+                            style="will-change: transform; background-image: url({{ slide.image.url }})">
+                        </div>
+                    </div>
+                    <div class="container position-relative z-index-10 d-flex h-100 align-items-start flex-column justify-content-center">
+                        <p class="title-small text-white opacity-75 mb-0" data-swiper-parallax="-100">{{ slide.subtitle }}</p>
+                        <h2 class="display-3 tracking-wide fw-bold text-uppercase tracking-wide text-white" data-swiper-parallax="100">
+                            {% if slide.title_highlighted %}
+                                {% if slide.title_start %}{{ slide.title_start }}{% endif %}
+                                <span class="text-outline-light">{{ slide.title_highlighted }}</span>
+                                {% if slide.title_end %}{{ slide.title_end }}{% endif %}
+                                {% if slide.show_year %}<span class="text-outline-light">&copy; {{ year }}</span>{% endif %}
+                            {% endif %}
+                        </h2>
+                        <div data-swiper-parallax-y="-25">
+                            <a href="{{ slide.button_link }}" class="btn btn-psuedo text-white" role="button">{{ slide.button_text }}</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+              <div class="swiper-pagination swiper-pagination-bullet-light"></div>
+            </div>
+            <!-- / Swiper Info-->        
+            </section>
+        <!--/ Top Banner-->
+        <!-- Featured Brands-->
+        <div class="brand-section container-fluid" data-aos="fade-in">
+          <div class="bg-overlay-sides-white-to-transparent bg-white py-5 py-md-7">
+              <section class="marquee marquee-hover-pause">
+                  <div class="marquee-body">
+                      <div class="marquee-section animation-marquee-50">
+                          {% for brand in brands %}
+                          <div class="mx-3 mx-lg-5 f-w-24">
+                              <a class="d-block" href="{% url 'products:all_products' %}?brand={{ brand.id }}">
+                                  <picture>
+                                      {% if brand.logo %}
+                                          <img class="img-fluid d-table mx-auto" style="height: 120px; object-fit: contain;" src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                                      {% else %}
+                                          <img class="img-fluid d-table mx-auto" style="height: 120px; object-fit: contain;" src="{% static 'assets/images/placeholder.jpg' %}" alt="{{ brand.name }}">
+                                      {% endif %}
+                                  </picture>
+                              </a>
+                          </div>
+                          {% endfor %}
+                      </div>
+                      <!-- Duplicate for continuous scroll effect -->
+                      <div class="marquee-section animation-marquee-50">
+                          {% for brand in brands %}
+                          <div class="mx-3 mx-lg-5 f-w-24">
+                              <a class="d-block" href="{% url 'products:all_products' %}?brand={{ brand.id }}">
+                                  <picture>
+                                      {% if brand.logo %}
+                                          <img class="img-fluid d-table mx-auto" style="height: 120px; object-fit: contain;" src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                                      {% else %}
+                                          <img class="img-fluid d-table mx-auto" style="height: 120px; object-fit: contain;" src="{% static 'assets/images/placeholder.jpg' %}" alt="{{ brand.name }}">
+                                      {% endif %}
+                                  </picture>
+                              </a>
+                          </div>
+                          {% endfor %}
+                      </div>
+                  </div>
+              </section>
+          </div>
+      </div>
+      <!--/ Featured Brands-->
+        <div class="container-fluid">
+            <!-- Featured Categories-->
+<div class="m-0">
+  <h3 class="title-small text-muted text-center mb-3 mt-5">Sản phẩm bán chạy</h3>
+  <div class="swiper-container overflow-hidden overflow-lg-visible"
+      data-swiper
+      data-options='{
+          "spaceBetween": 25,
+          "slidesPerView": 1,
+          "observer": true,
+          "observeParents": true,
+          "breakpoints": {     
+              "540": {
+                  "slidesPerView": 2,
+                  "spaceBetween": 20
+              },
+              "770": {
+                  "slidesPerView": 3,
+                  "spaceBetween": 20
+              },
+              "1024": {
+                  "slidesPerView": 4,
+                  "spaceBetween": 25
+              }
+          },   
+          "navigation": {
+              "nextEl": ".swiper-next",
+              "prevEl": ".swiper-prev"
+          }
+      }'>
+      <div class="swiper-wrapper">
+    {% for item in best_sellers|slice:":6" %}
+    <div class="swiper-slide align-self-stretch h-auto px-2">
+        <div class="card product-card-hover-show-options h-100 bg-white shadow-sm" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:1|stringformat:'d'}}00">
+            <picture class="position-relative d-block">
+                {% if item.product.image %}
+                    <img class="w-100 img-fluid" style="height: 300px; object-fit: contain;" title="{{ item.product.name }}" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                {% else %}
+                    <img class="w-100 img-fluid" style="height: 300px; object-fit: contain;" title="{{ item.product.name }}" src="{% static 'assets/images/products/placeholder.jpg' %}" alt="{{ item.product.name }}">
+                {% endif %}
+            </picture>
+            <div class="card-body px-3 py-4 text-center d-flex flex-column justify-content-between bg-white">
+                <div class="product-info mb-3">
+                    <p class="mb-1 fw-bold text-success">Đã bán {{ item.total_sold }}</p>
+                    <h4 class="mb-2 fw-bold">{{ item.product.name }}</h4>
+                    {% if item.product.sale_price %}
+                        <p class="mb-0">
+                            <span class="text-danger fs-5">{{ item.product.sale_price }}VNĐ</span>
+                            <s class="text-muted ms-2">{{ item.product.price }}VNĐ</s>
+                        </p>
+                    {% else %}
+                        <p class="mb-0 text-danger fs-5">{{ item.product.price }}VNĐ</p>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-center align-items-center">
+                    <a href="{% url 'products:product_detail' item.product.id %}" class="btn btn-psuedo">Xem ngay</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+      <div class="swiper-btn swiper-prev swiper-disabled-hide swiper-btn-side btn-icon bg-white text-dark ms-3 shadow mt-n5">
+          <i class="ri-arrow-left-s-line"></i>
+      </div>
+      <div class="swiper-btn swiper-next swiper-disabled-hide swiper-btn-side swiper-btn-side-right btn-icon bg-white text-dark me-3 shadow mt-n5">
+          <i class="ri-arrow-right-s-line ri-lg"></i>
+      </div>
+  </div>
+</div>
+<!-- /Featured Categories-->
+            <!-- Homepage Intro-->
+            <div class="position-relative row my-lg-7 pt-5 pt-lg-0 g-8">
+                <div class="bg-text bottom-0 start-0 end-0" data-aos="fade-up">
+                    <h2 class="bg-text-title opacity-10"><span class="text-outline-dark"></span>DStore</h2>
+                </div>
+                <div class="col-12 col-md-6 position-relative z-index-20 mb-7 mb-lg-0" data-aos="fade-right">
+                    <p class="text-muted title-small">Chào mừng bạn</p>
+                    <h3 class="display-3 fw-bold mb-5"><span class="text-outline-dark">DStore</span> & Đam mê & Yêu thích & Trải nghiệm </h3>
+                    <p class="lead">Chúng tôi là DStore, nhà cung cấp hàng đầu các thương hiệu thời trang dạo phố toàn cầu, bao gồm cả những cái tên như 
+                      {% for brand in brands|slice:":4" %}
+                          <a href="{% url 'products:all_products' %}?brand={{ brand.id }}">{{ brand.name }}</a>{% if not forloop.last %}, {% endif %}
+                      {% endfor %} 
+                      và nhiều hơn nữa.</p>
+                    <p class="lead">Với vận chuyển trên toàn thế giới và giá cả cạnh tranh nhất - bây giờ là thời điểm tuyệt vời để chọn thứ gì đó từ phạm vi của chúng tôi.</p>
+                    <a href="{% url 'products:all_products' %}" class="btn btn-psuedo" role="button">Mua sắm ngay</a>
+                </div>
+                <div class="col-12 col-md-6 position-relative z-index-20 pe-0" data-aos="fade-left">
+                  <!-- First position - small image on left -->
+                  <picture class="w-50 d-block position-relative z-index-10 border border-white border-4 shadow-lg">
+                      {% with first_promo=active_promotions|first %}
+                          {% if first_promo %}
+                              <img class="img-fluid" src="{{ first_promo.image.url }}" alt="{{ first_promo.description }}">
+                              <div class="position-absolute bottom-0 start-0 p-3 bg-black bg-opacity-25 text-white w-100 backdrop-blur-sm">
+                                  <p class="mb-0 small">Mã giảm giá: <strong>{{ first_promo.code }}</strong></p>
+                                  <small>{{ first_promo.description|truncatechars:50 }}</small>
+                              </div>
+                          {% endif %}
+                      {% endwith %}
+                  </picture>
+              
+                  <!-- Second position - larger image on right -->
+                  <picture class="w-60 d-block me-8 mt-n10 shadow-lg border border-white border-4 position-relative z-index-20 ms-auto">
+                      {% with second_promo=active_promotions|slice:"1:2"|first %}
+                          {% if second_promo %}
+                              <img class="img-fluid" src="{{ second_promo.image.url }}" alt="{{ second_promo.description }}">
+                              <div class="position-absolute bottom-0 start-0 p-3 bg-black bg-opacity-25 text-white w-100 backdrop-blur-sm">
+                                  <p class="mb-0 small">Mã giảm giá: <strong>{{ second_promo.code }}</strong></p>
+                                  <small>{{ second_promo.description|truncatechars:50 }}</small>
+                              </div>
+                          {% endif %}
+                      {% endwith %}
+                  </picture>
+              
+                  <!-- Third position - background image -->
+                  <picture class="w-50 d-block me-8 mt-n7 shadow-lg border border-white border-4 position-absolute top-0 end-0 z-index-0">
+                      {% with third_promo=active_promotions|slice:"2:3"|first %}
+                          {% if third_promo %}
+                              <img class="img-fluid" src="{{ third_promo.image.url }}" alt="{{ third_promo.description }}">
+                              <div class="position-absolute bottom-0 end-0 p-3 bg-black bg-opacity-25 text-white w-75 backdrop-blur-sm text-end">
+                                  <p class="mb-0 small">Mã giảm giá: <strong>{{ third_promo.code }}</strong></p>
+                                  <small>{{ third_promo.description|truncatechars:50 }}</small>
+                              </div>
+                          {% endif %}
+                      {% endwith %}
+                  </picture>
+              </div>
+            </div>
+            <!-- / Homepage Intro-->
+
+            <!-- Homepage Banners-->
+            <div class="pt-7 mb-5 mb-lg-10">
+                <div class="row g-4">
+                    <div class="col-12 col-xl-6 position-relative" data-aos="fade-right">
+                        <picture class="position-relative z-index-10">
+                            <img class="w-100 rounded" src="{% static 'assets/images/banners/banner-sale.jpg' %}" alt="HTML Bootstrap Template by Pixel Rocket">
+                        </picture>
+                        <div class="position-absolute top-0 bottom-0 start-0 end-0 d-flex justify-content-center align-items-center z-index-20">
+                          <div class="py-6 px-5 px-lg-10 text-center w-100">
+                              <h2 class="display-1 mb-3 fw-bold text-white"><span class="text-outline-light">Sản phẩm đang</span> Sale</h2>
+                              <p class="fs-5 fw-light text-white d-none d-md-block">Giảm giá chớp nhoáng của chúng tôi hiện đang bật! Hãy mua cho mình một món hời từ các thương hiệu thời trang dạo phố theo đúng ý mình nào.</p>
+                              <a href="{% url 'products:all_products' %}?label=sale" class="btn btn-psuedo text-white" role="button">Đi đến trang tất cả sản phẩm</a>
+                          </div>
+                      </div>
+                    </div>
+                    <div class="col-12 col-xl-6" data-aos="fade-left">
+                        <div class="row g-4 justify-content-end">
+                            <div class="col-12 col-md-6 d-flex">
+                                <div class="card position-relative overflow-hidden">
+                                    <picture class="position-relative z-index-10 d-block bg-light">
+                                        <img class="w-100 rounded" src="{% static 'assets/images/banners/banner-8.jpg' %}" alt="HTML Bootstrap Template by Pixel Rocket">
+                                    </picture>
+                                    <div class="card-overlay">
+                                      <p class="lead fw-bolder mb-2">Jordan Delta 2</p>
+                                      <a href="{% url 'products:all_products' %}?search=Jordan" class="btn btn-psuedo text-white py-2" role="button">Mua ngay nào</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 d-flex">
+                                <div class="card position-relative overflow-hidden">
+                                    <picture class="position-relative z-index-10 d-block bg-light">
+                                        <img class="w-100 rounded" src="{% static 'assets/images/banners/banner9.jpg' %}" alt="HTML Bootstrap Template by Pixel Rocket">
+                                    </picture>
+                                    <div class="card-overlay">
+                                        <p class="lead fw-bolder mb-2">Nhiều mẫu mã</p>
+                                        <a href="{% url 'products:all_products' %}" class="btn btn-psuedo text-white py-2" role="button">Trải nghiệm ngay</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 d-flex">
+                                <div class="card position-relative overflow-hidden">
+                                    <picture class="position-relative z-index-10 d-block bg-light">
+                                        <img class="w-100 rounded" src="{% static 'assets/images/banners/banner-10.webp' %}" alt="HTML Bootstrap Template by Pixel Rocket">
+                                    </picture>
+                                    <div class="card-overlay">
+                                        <p class="lead fw-bolder mb-2">Giày chạy bộ độc đáo</p>
+                                        <a href="{% url 'products:all_products' %}" class="btn btn-psuedo text-white py-2" role="button">Đi mua thôi</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6 d-flex">
+                                <div class="card position-relative overflow-hidden">
+                                    <picture class="position-relative z-index-10 d-block bg-light">
+                                        <img class="w-100 rounded" src="{% static 'assets/images/banners/banner11.jpg' %}" alt="HTML Bootstrap Template by Pixel Rocket">
+                                    </picture>
+                                    <div class="card-overlay">
+                                        <p class="lead fw-bolder mb-2">Sneaker cho bạn</p>
+                                        <a href="{% url 'products:all_products' %}" class="btn btn-psuedo text-white py-2" role="button">Vào trang sản phẩm</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- / Homepage Banners-->
+
+            <!-- Instagram-->
+<!-- Swiper Instagram -->
+<div data-aos="fade-in">
+  <h3 class="title-small text-muted text-center mb-3 mt-5">
+      <i class="ri-instagram-line align-bottom"></i> #DStore - Nơi đến với đam mê
+  </h3>
+  <div class="overflow-hidden">
+      <div class="swiper-container swiper-overflow-visible"
+    data-swiper
+    data-options='{
+        "spaceBetween": 10,
+        "loop": false,
+        "slidesPerView": 6,
+        "autoplay": {
+            "delay": 5000,
+            "disableOnInteraction": false
+        },
+        "breakpoints": {
+            "0": {
+                "slidesPerView": 1,
+                "spaceBetween": 5
+            },
+            "400": {
+                "slidesPerView": 2,
+                "spaceBetween": 8
+            },
+            "600": {
+                "slidesPerView": 3,
+                "spaceBetween": 8
+            },       
+            "999": {
+                "slidesPerView": 5,
+                "spaceBetween": 10
+            },
+            "1024": {
+                "slidesPerView": 6,
+                "spaceBetween": 10
+            }
+        }
+    }'>
+          <div class="swiper-wrapper mb-5">
+              {% for post in instagram_posts %}
+              <div class="swiper-slide flex-column">
+                <picture>
+                    <img class="rounded shadow-sm img-fluid"
+                        data-zoomable
+                        src="{{ post.image.url }}"
+                        title="{{ post.title }}"
+                        alt="{{ post.alt_text }}"
+                        style="width: 200px; height: 200px; object-fit: cover;">
+                </picture>
+            </div>
+              {% endfor %}
+          </div>
+      </div>
+  </div>
+</div>
+<!-- /Swiper Instagram-->
+        </div>
+        <!-- /Page Content -->
+    </section>
+    <!-- / Main Section-->
+
+    <!-- Footer -->
+{% endblock content %}

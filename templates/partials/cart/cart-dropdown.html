@@ -1,0 +1,37 @@
+{% load static %}
+<li class="ms-1 d-inline-block position-relative dropdown-cart">
+    <button class="nav-link me-0 disable-child-pointer border-0 p-0 bg-transparent text-body" type="button">
+        Giỏ hàng (<span id="cart-count">{{ cart_items|length }}</span>)
+    </button>
+    <div class="cart-dropdown dropdown-menu">
+    
+        <!-- Cart Header-->
+        <div class="d-flex justify-content-between align-items-center border-bottom pt-3 pb-4">
+            <h6 class="fw-bolder m-0">Số lượng (<span id="cart-total-items">{{ cart_items|length }}</span> sản phẩm)</h6>
+            <i class="ri-close-circle-line text-muted ri-lg cursor-pointer btn-close-cart"></i>
+        </div>
+        <!-- / Cart Header-->
+    
+        <!-- Cart Items-->
+        <div class="cart-items-container">
+            {% for item in cart_items %}
+                <div class="d-flex align-items-center border-bottom py-2">
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="me-3" style="width: 50px; height: 50px;">
+                    <div>
+                        <p class="m-0 fw-bold">{{ item.product.name }}</p>
+                        <p class="text-muted small m-0">Size: {{ item.size.name }} / Màu: {{ item.color.name }} / Số lượng: {{ item.quantity }}</p>
+                    </div>
+                    <p class="m-0 ms-auto fw-bold">{{ item.product.price }}VNĐ</p>
+                </div>
+            {% endfor %}
+        </div>
+        <!-- /Cart Items-->
+    
+        <!-- Cart Summary-->
+        <div>
+            <a href="{% url 'cart:cart' %}" class="btn btn-outline-dark w-100 text-center mt-4" role="button">Xem chi tiết giỏ hàng</a>
+            <a href="{% url 'checkout:information' %}" class="btn btn-dark w-100 text-center mt-2" role="button">Tiến hành thanh toán</a>
+        </div>
+        <!-- / Cart Summary-->
+    </div>
+</li>

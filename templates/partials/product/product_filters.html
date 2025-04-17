@@ -1,0 +1,348 @@
+{% load humanize %}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasFilters" aria-labelledby="offcanvasFiltersLabel">
+    <div class="offcanvas-header pb-0 d-flex align-items-center">
+        <h5 class="offcanvas-title" id="offcanvasFiltersLabel">Bộ lọc</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form method="GET" action="">
+            <div class="filters-container">
+                <div class="py-4 widget-filter widget-filter-price">
+                    <a class="small text-body text-decoration-none text-secondary-hover transition-all transition-all fs-6 fw-bolder d-block collapse-icon-chevron"
+                        data-bs-toggle="collapse" href="#filter-modal-price" role="button" aria-expanded="true"
+                        aria-controls="filter-modal-price">
+                        Giá
+                    </a>
+                    <div id="filter-modal-price" class="collapse show">
+                        <div class="mt-4">
+                            <div class="range-slider">
+                                <div class="slider-track"></div>
+                                <input type="range" class="range-min" value="{{ min_price|default:1 }}" min="1" max="30000000">
+                                <input type="range" class="range-max" value="{{ max_price|default:30000000 }}" min="1" max="30000000">
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="input-group mb-0 me-2 border">
+                                    <span class="input-group-text bg-transparent fs-7 p-2 text-muted border-0">VNĐ</span>
+                                    <input type="text" name="price_min" class="form-control-sm price-min border-0 text-muted" 
+                                           value="{{ min_price|default:1|intcomma }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                </div>
+                                <div class="px-2 text-muted">-</div>
+                                <div class="input-group mb-0 ms-2 border">
+                                    <span class="input-group-text bg-transparent fs-7 p-2 text-muted border-0">VNĐ</span>
+                                    <input type="text" name="price_max" class="form-control-sm price-max border-0 text-muted" 
+                                           value="{{ max_price|default:30000000|intcomma }}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                </div>
+                            </div>
+                            {% if min_price or max_price %}
+    {% if products.count == 0 %}
+    <div class="alert alert-warning mt-3 py-2 small">
+        Không tìm thấy sản phẩm nào từ {{ min_price|intcomma }} VNĐ đến {{ max_price|intcomma }} VNĐ
+    </div>
+    {% endif %}
+{% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Brand Filter -->
+                <div class="py-4 widget-filter border-top">
+                    <a class="small text-body text-decoration-none text-secondary-hover transition-all transition-all fs-6 fw-bolder d-block collapse-icon-chevron"
+                        data-bs-toggle="collapse" href="#filter-modal-brands" role="button" aria-expanded="true"
+                        aria-controls="filter-modal-brands">
+                        Thương hiệu
+                    </a>
+                    <div id="filter-modal-brands" class="collapse show">
+                        <div class="input-group mb-3 mt-3">
+                            <input type="text" class="form-control brand-search" placeholder="Tìm thương hiệu...">
+                            <span class="input-group-text bg-transparent"><i class="ri-search-line"></i></span>
+                        </div>
+                        <div class="filter-options brand-list">
+                            {% if brands %}
+                            {% for brand in brands %}
+                            <div class="form-group form-check-custom mb-1">
+                                <input type="checkbox" name="brands" value="{{ brand.id }}" 
+                                       class="form-check-input" id="brand-{{ brand.id }}"
+                                       {% if brand.id|stringformat:"s" in selected_brands %}checked{% endif %}>
+                                <label class="form-check-label fw-normal text-body flex-grow-1 d-flex align-items-center"
+                                       for="brand-{{ brand.id }}">
+                                    {{ brand.name }} <span class="text-muted ms-1 fs-9">({{ brand.product_count }})</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted small mb-0">Không có thương hiệu nào</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Color Filter -->
+<div class="py-4 widget-filter border-top">
+    <a class="small text-body text-decoration-none text-secondary-hover transition-all transition-all fs-6 fw-bolder d-block collapse-icon-chevron"
+        data-bs-toggle="collapse" href="#filter-modal-colors" role="button" aria-expanded="true"
+        aria-controls="filter-modal-colors">
+        Màu sắc
+    </a>
+    <div id="filter-modal-colors" class="collapse show">
+        <div class="filter-options mt-3">
+            {% if colors %}
+            {% for color in colors %}
+            <div class="form-group d-inline-block mr-2 mb-2 form-check-bg form-check-custom">
+                <input type="checkbox" name="colors" value="{{ color.id }}"
+                       class="form-check-bg-input" id="color-{{ color.id }}"
+                       {% if color.id|stringformat:"s" in selected_colors %}checked{% endif %}>
+                <label class="form-check-label color-label" for="color-{{ color.id }}"
+                       title="{{ color.name }} ({{ color.product_count }})"
+                       style="background-color: {{ color.code }}">
+                </label>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-muted small mb-0">Không có màu sắc nào</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+                <!-- Size Filter -->
+                <div class="py-4 widget-filter border-top">
+                    <a class="small text-body text-decoration-none text-secondary-hover transition-all transition-all fs-6 fw-bolder d-block collapse-icon-chevron"
+                        data-bs-toggle="collapse" href="#filter-modal-sizes" role="button" aria-expanded="true"
+                        aria-controls="filter-modal-sizes">
+                        Kích thước
+                    </a>
+                    <div id="filter-modal-sizes" class="collapse show">
+                        <div class="filter-options mt-3">
+                            {% if sizes %}
+                            {% for size in sizes %}
+                            <div class="form-group d-inline-block mr-2 mb-2 form-check-bg form-check-custom">
+                                <input type="checkbox" name="sizes" value="{{ size.id }}"
+                                       class="form-check-bg-input" id="size-{{ size.id }}"
+                                       {% if size.id|stringformat:"s" in selected_sizes %}checked{% endif %}>
+                                <label class="form-check-label fw-normal" for="size-{{ size.id }}">
+                                    {{ size.name }} <span class="text-muted">({{ size.product_count }})</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-muted small mb-0">Không có kích thước nào</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="filters-footer">
+                <button type="submit" class="btn btn-dark w-100 mb-2">Áp dụng</button>
+                <a href="." class="btn btn-outline-dark w-100">Xóa bộ lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const offcanvas = document.getElementById('offcanvasFilters');
+        const rangeMin = offcanvas.querySelector('.range-min');
+        const rangeMax = offcanvas.querySelector('.range-max');
+        const inputMin = offcanvas.querySelector('.price-min');
+        const inputMax = offcanvas.querySelector('.price-max');
+        const sliderTrack = offcanvas.querySelector('.slider-track');
+
+        if (!rangeMin || !rangeMax || !inputMin || !inputMax || !sliderTrack) return;
+
+        function formatPrice(value) {
+            return new Intl.NumberFormat('vi-VN', {
+                maximumFractionDigits: 0,
+                minimumFractionDigits: 0
+            }).format(value);
+        }
+
+        function updateSlider(fromInput = false) {
+            let min, max;
+            
+            if (fromInput) {
+                min = parseInt(inputMin.value.replace(/[^\d]/g, ''));
+                max = parseInt(inputMax.value.replace(/[^\d]/g, ''));
+            } else {
+                min = parseInt(rangeMin.value);
+                max = parseInt(rangeMax.value);
+            }
+
+            // Validate input values
+            min = isNaN(min) ? 1 : Math.max(1, Math.min(min, 30000000));
+            max = isNaN(max) ? 30000000 : Math.max(1, Math.min(max, 30000000));
+            
+            const minVal = Math.min(min, max - 1);
+            const maxVal = Math.max(max, min + 1);
+            
+            // Update range sliders position
+            rangeMin.value = minVal;
+            rangeMax.value = maxVal;
+            
+            // Update input values with formatting
+            inputMin.value = formatPrice(minVal);
+            inputMax.value = formatPrice(maxVal);
+            
+            // Update slider track
+            const percent1 = ((minVal - 1) / (30000000 - 1)) * 100;
+            const percent2 = ((maxVal - 1) / (30000000 - 1)) * 100;
+            sliderTrack.style.background = `linear-gradient(to right, #ddd ${percent1}%, #212529 ${percent1}%, #212529 ${percent2}%, #ddd ${percent2}%)`;
+        }
+
+        // Add input event listeners
+        inputMin.addEventListener('input', () => updateSlider(true));
+        inputMax.addEventListener('input', () => updateSlider(true));
+        rangeMin.addEventListener('input', () => updateSlider(false));
+        rangeMax.addEventListener('input', () => updateSlider(false));
+
+        // Form submit handler
+        offcanvas.querySelector('form').addEventListener('submit', function(e) {
+            // Remove default form submission
+            e.preventDefault();
+            
+            // Get values from range inputs
+            const minValue = parseInt(rangeMin.value);
+            const maxValue = parseInt(rangeMax.value);
+            
+            // Update form inputs with raw values
+            inputMin.value = minValue;
+            inputMax.value = maxValue;
+            
+            // Submit the form
+            this.submit();
+        });
+
+        // Initialize slider
+        updateSlider();
+
+        // Brand search functionality remains unchanged
+        const brandSearch = document.querySelector('.brand-search');
+        const brandItems = document.querySelectorAll('.brand-list .form-group');
+
+        if (brandSearch) {
+            brandSearch.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                brandItems.forEach(item => {
+                    const brandName = item.querySelector('label').textContent.toLowerCase();
+                    if (brandName.includes(searchTerm)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+<style>
+    .range-slider {
+        position: relative;
+        width: 100%;
+        height: 5px;
+        background: #ddd;
+        border-radius: 5px;
+        margin: 30px 0;
+    }
+
+    .slider-track {
+        height: 100%;
+        position: absolute;
+        background-color: #212529;
+        border-radius: 5px;
+    }
+
+    .range-slider input[type="range"] {
+        -webkit-appearance: none;
+        position: absolute;
+        width: 100%;
+        height: 5px;
+        background: none;
+        pointer-events: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #212529;
+        cursor: pointer;
+        pointer-events: auto;
+        margin-top: -7px;
+    }
+
+    .offcanvas {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 600px;
+        height: 100vh;
+        background: #fff;
+        visibility: hidden;
+        transform: translateX(100%);
+        transition: all .3s ease;
+        z-index: 1045;
+        border-left: 1px solid #dee2e6;
+        box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+    }
+    
+    .offcanvas.show {
+        visibility: visible;
+        transform: translateX(0);
+    }
+    
+    .offcanvas-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(139, 139, 139, 0.5);
+        z-index: 1044;
+    }
+    .form-control-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 0;
+        background: transparent;
+    }
+    
+    .input-group.border {
+        border-radius: 4px;
+    }
+    
+    .input-group .form-control-sm:focus {
+        outline: none;
+        box-shadow: none;
+    }
+    .form-check-bg {
+        display: inline-block;
+        margin: 0 5px 10px 0;
+    }
+    
+    .form-check-bg input {
+        display: none;
+    }
+    
+    .color-label {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: block;
+        cursor: pointer;
+        border: 2px solid #000000;
+        transition: all 0.2s ease;
+    }
+    
+    .form-check-bg input:checked + .color-label {
+        border-color: #212529;
+        transform: scale(1.1);
+    }
+    
+    .color-label:hover {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+</style>

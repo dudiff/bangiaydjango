@@ -1,0 +1,63 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="mt-4 mb-5">
+    <div class="container">
+        <h1 class="text-center mb-4">Hướng dẫn chọn giày</h1>
+        <div class="row">
+            <div class="col-12">
+                <div class="accordion" id="guideAccordion">
+                    {% for guide in guides %}
+                    <div class="accordion-item border-0 mb-3 shadow-sm">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#guide-{{ guide.id }}" aria-expanded="false" 
+                                    aria-controls="guide-{{ guide.id }}">
+                                {{ guide.title }}
+                            </button>
+                        </h2>
+                        <div id="guide-{{ guide.id }}" class="accordion-collapse collapse">
+                            <div class="accordion-body bg-light">
+                                {% if guide.image %}
+                                <div class="text-center mb-4">
+                                    <img src="{{ guide.image.url }}" alt="{{ guide.title }}" class="img-fluid rounded">
+                                </div>
+                                {% endif %}
+                                <div class="content">
+                                    {{ guide.content|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% if guides.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if guides.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ guides.previous_page_number }}">&laquo;</a>
+                </li>
+                {% endif %}
+
+                {% for i in guides.paginator.page_range %}
+                <li class="page-item {% if guides.number == i %}active{% endif %}">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                </li>
+                {% endfor %}
+
+                {% if guides.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ guides.next_page_number }}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-4">Email xác thực đã được gửi</h3>
+                    <p class="card-text">
+                        Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn.
+                        Vui lòng kiểm tra hộp thư đến (và thư mục spam) để kích hoạt tài khoản.
+                    </p>
+                    <p class="card-text small text-muted">
+                        Nếu bạn không nhận được email trong vòng vài phút, 
+                        vui lòng kiểm tra thư mục spam hoặc liên hệ với chúng tôi để được hỗ trợ.
+                    </p>
+                    <a href="{% url 'userauths:sign-in' %}" class="btn btn-primary mt-3">
+                        Quay lại trang đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

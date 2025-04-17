@@ -1,0 +1,23 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    {{ block.super }}
+    {% include 'partials/product/product-reviews.html' with include_css=True only %}
+{% endblock extra_css %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {% include 'partials/product/product-reviews.html' with include_js=True only %}
+{% endblock extra_js %}
+
+{% block content %}
+<!-- Thông tin sản phẩm -->
+{% include 'partials/product/product-info.html' %}
+<div style="margin-top: 100px;"></div>
+<!-- Đánh giá sản phẩm -->
+{% include 'partials/product/product-reviews.html' with include_content=True %}
+<div style="margin-top: 100px;"></div>
+<!-- Sản phẩm liên quan -->
+{% include 'partials/product/product-related.html' %}
+{% endblock content %}
