@@ -78,7 +78,7 @@ Clone the repository
 bash
 Copy
 Edit
-git clone https://github.com/yourusername/bangiaydjango.git
+git clone https://github.com/dudiff/bangiaydjango.git
 cd bangiaydjango
 Create and activate a virtual environment
 
